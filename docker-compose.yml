@@ -30,6 +30,7 @@ services:
   emulators:
     image: spine3/firebase-emulator
     volumes:
+      - ./functions/:/firebase/functions
       - ./.firebaserc:/firebase/.firebaserc
       - ./firebase.json:/firebase/firebase.json
       - ./firestore.indexes.json:/firebase/firebase.indexes.json
