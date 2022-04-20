@@ -28,7 +28,11 @@ services:
       - 3001:3001
 
   emulators:
-    image: spine3/firebase-emulator
+    build:
+      context: .
+      dockerfile: ./emulators/Dockerfile
+    environment:
+      GCP_PROJECT: jacobianmatthews-portfolio
     volumes:
       - ./functions/:/firebase/functions
       - ./.firebaserc:/firebase/.firebaserc
