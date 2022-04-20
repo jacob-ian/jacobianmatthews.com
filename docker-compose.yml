@@ -1,0 +1,42 @@
+services:
+  frontend:
+    build:
+      context: frontend
+      dockerfile: ./frontend/Dockerfile
+      target: dev
+    volumes:
+      - ./frontend:/opt/jacobianmatthews.com/frontend
+    environment:
+      PORT: 3000
+      FIREBASE_EMULATORS: true
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+  
+  backend:
+    build:
+      context: backend
+      dockerfile: ./backend/Dockerfile
+      target: dev
+    volumes:
+      - ./backend:/opt/jacobianmatthews.com/backend
+    environment:
+      PORT: 3001
+      FIREBASE_EMULATORS: true
+    ports:
+      - 3001:3001
+
+  emulators:
+    image: spine3/firebase-emulator
+    volumes: 
+      - ./firebase.json:/firebase/firebase.json
+      - ./firestore.indexes.json:/firebase/firebase.indexes.json
+      - ./firestore.rules:/firebase/firestore.rules
+      - ./storage.rules:/firebase/storage.rules
+    ports:
+      - 9099:9099
+      - 5001:5001
+      - 8080:8080
+      - 9199:9199
+      - 4000:4000
