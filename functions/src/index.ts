@@ -1,6 +1,3 @@
-import * as functions from "firebase-functions";
+import { exportFunctions } from "firebase-functions-exporter";
 
-export const helloWorld = functions.https.onRequest((request, response) => {
-  functions.logger.info("Hello logs!", { structuredData: true });
-  response.send("Hello from Firebase!");
-});
+module.exports = exportFunctions();
