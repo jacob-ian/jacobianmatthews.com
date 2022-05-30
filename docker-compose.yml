@@ -31,11 +31,12 @@ services:
   emulators:
     build:
       context: .
-      dockerfile: ./emulators/Dockerfile
-    environment:
-      GCP_PROJECT: jacobianmatthews-portfolio
+      dockerfile: emulators/Dockerfile
+    env_file: emulators/.env
     volumes:
-      - ./functions/:/firebase/functions
+      - ./emulators/data:/firebase/baseline-data
+      - ./functions:/firebase/functions
+      - ./extensions/:/firebase/extensions
       - ./.firebaserc:/firebase/.firebaserc
       - ./firebase.json:/firebase/firebase.json
       - ./firestore.indexes.json:/firebase/firebase.indexes.json

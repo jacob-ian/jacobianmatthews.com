@@ -4,4 +4,6 @@ export interface User {
   email: string;
   emailVerified: boolean;
   photoUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

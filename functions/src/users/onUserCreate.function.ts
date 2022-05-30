@@ -31,6 +31,8 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
     emailVerified,
     name: displayName,
     photoUrl: photoURL,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 });
 
@@ -42,7 +44,10 @@ async function sendEmailVerificationLink(
   email: string,
   name: string,
 ): Promise<void> {
-  const verificationLink = admin.auth().generateEmailVerificationLink(email);
+  const verificationLink = await admin
+    .auth()
+    .generateEmailVerificationLink(email);
+  functions.logger.info(`Sending verification email to ${email}`);
   return emailService.sendEmail({
     to: email,
     message: {
@@ -50,11 +55,9 @@ async function sendEmailVerificationLink(
       html: `Hey ${name},
       
 
-      Please verify your email address by clicking <a href="${verificationLink}">here</a>.
+      Please verify your email address by following the link <a href="${verificationLink}">${verificationLink}</a>.
 
-      You can also paste the following into your browser:
-
-      <pre>${verificationLink}</pre>
+      If this wasn't you, please ignore this email.
 
 
       Thanks,

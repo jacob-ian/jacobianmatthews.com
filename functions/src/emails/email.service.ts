@@ -6,6 +6,7 @@ interface Email {
   message: {
     subject: string;
     html: string;
+    text?: string;
   };
 }
 
