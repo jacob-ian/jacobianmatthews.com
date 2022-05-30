@@ -52,6 +52,7 @@ async function sendEmailVerificationLink(
     to: email,
     message: {
       subject: "Verify Your Email Address | Jacob Ian Matthews",
+      text: `Hey ${name}, Please verify your email address by following the link...`,
       html: `Hey ${name},
       
 
