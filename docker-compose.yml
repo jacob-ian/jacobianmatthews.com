@@ -8,12 +8,15 @@ services:
       - ./frontend:/opt/jacobianmatthews.com/frontend
     environment:
       PORT: 3000
-      FIREBASE_EMULATORS: 'true'
+      NODE_ENV: development
+      FIREBASE_AUTH_EMULATOR_HOST: http://emulators:9099
+      FIREBASE_PROJECT_ID: jacobianmatthews-com
       BACKEND_URL: http://backend:3001
     ports:
       - 3000:3000
     depends_on:
       - backend
+      - emulators
   
   backend:
     build:
