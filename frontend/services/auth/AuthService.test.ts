@@ -1,4 +1,4 @@
-import { AuthService } from "./auth.service";
+import { AuthService } from "./AuthService";
 
 describe("AuthService", () => {
   describe("handleAuthRedirect", () => {

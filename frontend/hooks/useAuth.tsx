@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { FirebaseOptions, initializeApp } from "firebase/app";
 import { User } from "../interfaces/user.interface";
-import { AuthService } from "../services/auth/auth.service";
+import { AuthService } from "../services/auth/AuthService";
 import { NoAuthRedirectException } from "../services/auth/NoAuthRedirectException";
 import { isDevEnvironment } from "../utils/isDevEnvironment";
 import { useRouter } from "next/router";

@@ -12,7 +12,7 @@ import {
 import { User } from "../../interfaces/user.interface";
 import { getCookie } from "../../utils/getCookie";
 import { isDevEnvironment } from "../../utils/isDevEnvironment";
-import { HttpService } from "../http/http.service";
+import { HttpService } from "../http/HttpService";
 import { InvalidAuthException } from "./InvalidAuthException";
 import { NoAuthRedirectException } from "./NoAuthRedirectException";
 
