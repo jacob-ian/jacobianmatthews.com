@@ -2,7 +2,8 @@ import { NextPage } from "next";
 import { useRouter } from "next/router";
 import AppleLoginButton from "../components/Login/SocialLoginButton/AppleLoginButton/AppleLoginButton";
 import GoogleLoginButton from "../components/Login/SocialLoginButton/GoogleLoginButton/GoogleLoginButton";
-import { useAuth, useAuthService } from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
+import { useAuthService } from "../hooks/useAuthService";
 import styles from "../styles/Login.module.scss";
 
 const Login: NextPage = () => {

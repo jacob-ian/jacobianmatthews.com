@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import AuthProvider from "../hooks/useAuth";
+import AuthProvider from "../context/AuthProvider";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
