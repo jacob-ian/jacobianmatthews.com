@@ -9,10 +9,20 @@ interface RequestInput {
   url: string;
   body?: Record<string, any>;
   headers?: Headers;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 }
 
+type PostRequestInput = Omit<RequestInput, "method">;
+type GetRequestInput = Pick<RequestInput, "url" | "headers"> & {
+  headers?: Headers;
+};
+
 export class HttpService {
-  public async post<T = unknown>(request: RequestInput): Promise<T> {
+  public async post<T = unknown>(request: PostRequestInput): Promise<T> {
+    return this._makeRequest<T>({ ...request, method: "POST" });
+  }
+
+  private async _makeRequest<T>(request: RequestInput): Promise<T> {
     const { url, body, headers } = request;
     const fetchRequest: RequestInit = {
       method: "POST",
@@ -26,20 +36,12 @@ export class HttpService {
       fetchRequest.headers = headers;
     }
 
-    const res = await this._makeRequest(url, fetchRequest);
-    return res.json();
-  }
-
-  private async _makeRequest(
-    url: string,
-    request: RequestInit,
-  ): Promise<Response> {
-    const res = await this._fetch(url, request);
+    const res = await this._fetch(url, fetchRequest);
     if (res.ok) {
-      return res;
+      return res.json();
     }
-    const body = await res.text();
-    const message = this._getErrorMessage(body);
+    const resBody = await res.text();
+    const message = this._getErrorMessage(resBody);
 
     const exceptionMap: {
       [status in HttpStatus]: new (message: string) => HttpException;
@@ -72,5 +74,9 @@ export class HttpService {
     } catch {
       return body;
     }
+  }
+
+  public async get<T = unknown>(request: GetRequestInput): Promise<T> {
+    return this._makeRequest<T>({ ...request, method: "GET" });
   }
 }
