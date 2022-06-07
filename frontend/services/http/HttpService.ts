@@ -23,9 +23,9 @@ export class HttpService {
   }
 
   private async _makeRequest<T>(request: RequestInput): Promise<T> {
-    const { url, body, headers } = request;
+    const { url, body, headers, method } = request;
     const fetchRequest: RequestInit = {
-      method: "POST",
+      method,
     };
 
     if (body) {
