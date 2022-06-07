@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import { User } from "../interfaces/user.interface";
 import { useRouter } from "next/router";
-import { AuthContext } from "../context/AuthProvider";
+import { AuthContext } from "../context/AuthProvider/AuthProvider";
 
 interface OnFailOptions {
   redirectTo: string;
