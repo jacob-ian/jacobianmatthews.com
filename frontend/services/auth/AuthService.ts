@@ -48,7 +48,6 @@ export class AuthService {
     if (!result) {
       throw new NoAuthRedirectException();
     }
-    console.log("is redirect");
     const idToken = await result.user.getIdToken();
     const csrfToken = await this._getCsrfToken();
     await this._loginToBackendWithIdToken(idToken, csrfToken);
@@ -66,7 +65,6 @@ export class AuthService {
   }
 
   private async _getCsrfToken(): Promise<string> {
-    console.log("here");
     await this._http.post({
       url: "/api/auth/csrf",
     });
@@ -78,9 +76,10 @@ export class AuthService {
   }
 
   public async getSignedInUser(): Promise<User> {
-    return this._http.get<User>({
+    const res = await this._http.get<{ data: User }>({
       url: "/api/auth/me",
     });
+    return res.data;
   }
 
   public async signOut(): Promise<void> {

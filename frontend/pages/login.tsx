@@ -1,5 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 import AppleLoginButton from "../components/Login/SocialLoginButton/AppleLoginButton/AppleLoginButton";
 import GoogleLoginButton from "../components/Login/SocialLoginButton/GoogleLoginButton/GoogleLoginButton";
 import { useAuth } from "../hooks/useAuth";
@@ -11,9 +12,11 @@ const Login: NextPage = () => {
   const authService = useAuthService();
   const router = useRouter();
 
-  if (auth) {
-    router.push("/dashboard");
-  }
+  useEffect(() => {
+    if (auth) {
+      router.push("/dashboard");
+    }
+  }, [auth]);
 
   function handleLoginButtonClick(provider: "apple" | "google") {
     if (!authService) {
