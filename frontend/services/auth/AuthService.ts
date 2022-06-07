@@ -48,11 +48,9 @@ export class AuthService {
     if (!result) {
       throw new NoAuthRedirectException();
     }
+    console.log("is redirect");
     const idToken = await result.user.getIdToken();
-    const csrfToken = getCookie("csrfToken");
-    if (!csrfToken) {
-      throw new InvalidAuthException("Missing CSRF Token");
-    }
+    const csrfToken = await this._getCsrfToken();
     await this._loginToBackendWithIdToken(idToken, csrfToken);
     await this._firebaseAuth.signOut();
   }
@@ -65,6 +63,18 @@ export class AuthService {
       url: "/api/auth/login",
       body: { idToken, csrfToken },
     });
+  }
+
+  private async _getCsrfToken(): Promise<string> {
+    console.log("here");
+    await this._http.post({
+      url: "/api/auth/csrf",
+    });
+    const cookie = getCookie("csrfToken");
+    if (!cookie) {
+      throw new InvalidAuthException("Missing CSRF Token Cookie");
+    }
+    return cookie;
   }
 
   public async getSignedInUser(): Promise<User> {
