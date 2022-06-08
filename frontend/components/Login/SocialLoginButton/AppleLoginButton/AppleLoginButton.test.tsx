@@ -1,10 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AppleLoginButton from "./AppleLoginButton";
 
 jest.mock("./apple.svg", () => "svg");
 
 describe("AppleLoginButton", () => {
+  afterEach(() => {
+    cleanup();
+  });
   it("Should render a button", () => {
     const onClick = () => {};
     render(<AppleLoginButton onClick={onClick} disabled={false} />);
