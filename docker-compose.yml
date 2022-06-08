@@ -6,6 +6,7 @@ services:
       target: dev
     volumes:
       - ./frontend:/opt/jacobianmatthews.com/frontend
+      - /opt/jacobianmatthews.com/frontend/node_modules
     environment:
       PORT: 3000
       NODE_ENV: development

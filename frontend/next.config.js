@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  swcMinify: false,
+  swcMinify: true,
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL;
 
@@ -19,5 +19,19 @@ module.exports = {
         destination: `${backendUrl}/:slug*`,
       },
     ];
+  },
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.svg$/,
+      issuer: /\.tsx?$/,
+      use: [
+        "next-swc-loader",
+        {
+          loader: "@svgr/webpack",
+          options: { babel: false },
+        },
+      ],
+    });
+    return config;
   },
 };
