@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { AuthServiceContext } from "../context/auth/AuthServiceContext";
-import { AuthService } from "../services/auth/AuthService";
 import { useAuthService } from "./useAuthService";
 
 function TestUseAuthService() {
