@@ -1,13 +1,11 @@
 import { Alert, Snackbar } from "@mui/material";
 import { FirebaseOptions, initializeApp } from "firebase/app";
-import { createContext, useEffect, useState } from "react";
-import { User } from "../../interfaces/user.interface";
+import { useEffect, useState } from "react";
 import { AuthService } from "../../services/auth/AuthService";
 import { isDevEnvironment } from "../../utils/isDevEnvironment";
+import { AuthContext } from "./AuthContext";
+import { AuthServiceContext } from "./AuthServiceContext";
 import { useRedirectAuth } from "./useRedirectAuth";
-
-export const AuthContext = createContext<User | null>(null);
-export const AuthServiceContext = createContext<AuthService | null>(null);
 
 interface AuthProviderProps {
   children: React.ReactNode;
