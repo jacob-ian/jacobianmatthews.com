@@ -31,11 +31,13 @@ function getFirebaseAppConfig(): FirebaseOptions {
 }
 
 export default function AuthProvider({ children }: AuthProviderProps) {
+  const [errorAlertOpen, setErrorAlertOpen] = useState(false);
   const config = getFirebaseAppConfig();
   const firebaseApp = initializeApp(config);
-  const [authService] = useState(new AuthService(firebaseApp));
-  const { user, error } = useRedirectAuth(authService);
-  const [errorAlertOpen, setErrorAlertOpen] = useState(false);
+  const [authService] = useState<AuthService>(new AuthService(firebaseApp));
+  const auth = useRedirectAuth(authService);
+
+  const { error } = auth;
 
   useEffect(() => {
     setErrorAlertOpen(!!error);
@@ -46,7 +48,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <AuthContext.Provider value={user}>
+    <AuthContext.Provider
+      value={auth || { loading: true, user: null, error: null }}>
       <AuthServiceContext.Provider value={authService}>
         <Snackbar
           open={errorAlertOpen}

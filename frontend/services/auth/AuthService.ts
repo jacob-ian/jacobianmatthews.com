@@ -24,11 +24,9 @@ export class AuthService {
     this._http = new HttpService();
     this._firebaseAuth = getAuth(firebase);
     if (isDevEnvironment()) {
-      connectAuthEmulator(
-        this._firebaseAuth,
-        process.env.FIREBASE_AUTH_EMULATOR_HOST || "http://localhost:9099",
-        { disableWarnings: true },
-      );
+      connectAuthEmulator(this._firebaseAuth, "http://localhost:9099", {
+        disableWarnings: true,
+      });
     }
     this._firebaseAuth.setPersistence(inMemoryPersistence);
   }
@@ -76,10 +74,9 @@ export class AuthService {
   }
 
   public async getSignedInUser(): Promise<User> {
-    const res = await this._http.get<{ data: User }>({
+    return this._http.get<User>({
       url: "/api/auth/me",
     });
-    return res.data;
   }
 
   public async signOut(): Promise<void> {

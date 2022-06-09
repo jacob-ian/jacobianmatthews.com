@@ -8,15 +8,19 @@ import { useAuthService } from "../hooks/useAuthService";
 import styles from "../styles/Login.module.scss";
 
 const Login: NextPage = () => {
-  const auth = useAuth();
+  const { loading, user } = useAuth();
   const authService = useAuthService();
   const router = useRouter();
 
   useEffect(() => {
-    if (auth) {
+    if (loading) {
+      return;
+    }
+
+    if (user) {
       router.push("/dashboard");
     }
-  }, [auth]);
+  }, [user, loading]);
 
   function handleLoginButtonClick(provider: "apple" | "google") {
     if (!authService) {
@@ -30,23 +34,27 @@ const Login: NextPage = () => {
     }
   }
 
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (user) {
+    return <p>Logging in...</p>;
+  }
+
   return (
     <>
       <h1>Login</h1>
-      {auth ? (
-        <p>Logging in...</p>
-      ) : (
-        <div className={styles["login-container"]}>
-          <GoogleLoginButton
-            onClick={() => handleLoginButtonClick("google")}
-            disabled={!authService}
-          />
-          <AppleLoginButton
-            onClick={() => handleLoginButtonClick("apple")}
-            disabled={!authService}
-          />
-        </div>
-      )}
+      <div className={styles["login-container"]}>
+        <GoogleLoginButton
+          onClick={() => handleLoginButtonClick("google")}
+          disabled={!authService}
+        />
+        <AppleLoginButton
+          onClick={() => handleLoginButtonClick("apple")}
+          disabled={!authService}
+        />
+      </div>
     </>
   );
 };

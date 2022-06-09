@@ -2,24 +2,27 @@ import { useContext, useEffect } from "react";
 import { User } from "../interfaces/user.interface";
 import { useRouter } from "next/router";
 import { AuthContext } from "../context/auth/AuthContext";
+import { AuthResult } from "../context/auth/useRedirectAuth";
 
 export interface OnFailOptions {
   redirectTo: string;
 }
 
-export function useAuth(onFailOptions?: OnFailOptions): User | null {
+export function useAuth(onFailOptions?: OnFailOptions): AuthResult {
   const router = useRouter();
-  const user = useContext(AuthContext);
+  const auth = useContext(AuthContext);
+  const { user, loading, error } = auth;
 
   useEffect(() => {
-    if (!onFailOptions) {
+    if (!onFailOptions || loading) {
       return;
     }
+
     const { redirectTo } = onFailOptions;
-    if (!user) {
+    if (!user || !!error) {
       router.push(redirectTo);
     }
-  }, [user]);
+  }, [user, loading]);
 
-  return user;
+  return auth;
 }

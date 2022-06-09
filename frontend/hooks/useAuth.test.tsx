@@ -24,7 +24,8 @@ describe("useAuth hook", () => {
   describe("With onFailOptions", () => {
     it("Should redirect page to provided onFailOptions url when auth user is null", () => {
       render(
-        <AuthContext.Provider value={null}>
+        <AuthContext.Provider
+          value={{ user: null, loading: false, error: null }}>
           <TestUseAuth options={{ redirectTo: "/test" }} />
         </AuthContext.Provider>,
       );
@@ -39,7 +40,8 @@ describe("useAuth hook", () => {
         admin: false,
       };
       render(
-        <AuthContext.Provider value={user}>
+        <AuthContext.Provider
+          value={{ user: user, loading: false, error: null }}>
           <TestUseAuth options={{ redirectTo: "/test" }} />
         </AuthContext.Provider>,
       );
@@ -54,7 +56,8 @@ describe("useAuth hook", () => {
         admin: false,
       };
       render(
-        <AuthContext.Provider value={user}>
+        <AuthContext.Provider
+          value={{ user: user, loading: false, error: null }}>
           <TestUseAuth options={{ redirectTo: "/test" }} />
         </AuthContext.Provider>,
       );
@@ -66,7 +69,8 @@ describe("useAuth hook", () => {
   describe("Without onFailOptions", () => {
     it("Should render null if useAuth returns null", async () => {
       render(
-        <AuthContext.Provider value={null}>
+        <AuthContext.Provider
+          value={{ user: null, loading: false, error: null }}>
           <TestUseAuth />
         </AuthContext.Provider>,
       );
@@ -82,7 +86,8 @@ describe("useAuth hook", () => {
         admin: false,
       };
       render(
-        <AuthContext.Provider value={user}>
+        <AuthContext.Provider
+          value={{ user: user, loading: false, error: null }}>
           <TestUseAuth />
         </AuthContext.Provider>,
       );

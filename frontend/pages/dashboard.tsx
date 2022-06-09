@@ -2,21 +2,21 @@ import { NextPage } from "next";
 import { useAuth } from "../hooks/useAuth";
 
 const Dashboard: NextPage = () => {
-  const auth = useAuth({ redirectTo: "/login" });
+  const { user, loading } = useAuth({ redirectTo: "/login" });
 
-  if (!auth) {
+  if (loading) {
     return <p>Loading...</p>;
   }
 
-  if (!auth.admin) {
+  if (user && !user.admin) {
     return <h1>Forbidden</h1>;
   }
 
   return (
-    <>
+    <div>
       <h1>Dashboard</h1>
-      {auth}
-    </>
+      {JSON.stringify(user)}
+    </div>
   );
 };
 

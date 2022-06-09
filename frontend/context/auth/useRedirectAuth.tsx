@@ -4,13 +4,13 @@ import { AuthService } from "../../services/auth/AuthService";
 import { NoAuthRedirectException } from "../../services/auth/NoAuthRedirectException";
 import { UnauthenticatedException } from "../../services/http/UnauthenticatedException";
 
-interface RedirectAuthResult {
+export interface AuthResult {
   loading: boolean;
   user: User | null;
   error: Error | null;
 }
 
-export function useRedirectAuth(authService: AuthService): RedirectAuthResult {
+export function useRedirectAuth(authService: AuthService): AuthResult {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -49,9 +49,6 @@ export function useRedirectAuth(authService: AuthService): RedirectAuthResult {
         if (err instanceof UnauthenticatedException) {
           return;
         }
-
-        // TODO: Remove
-        console.error(err);
         setError(
           new Error(
             "An error occurred while signing you in. Please try again.",

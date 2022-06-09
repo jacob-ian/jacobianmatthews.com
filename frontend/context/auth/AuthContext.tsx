@@ -1,4 +1,8 @@
 import { createContext } from "react";
-import { User } from "../../interfaces/user.interface";
+import { AuthResult } from "./useRedirectAuth";
 
-export const AuthContext = createContext<User | null>(null);
+export const AuthContext = createContext<AuthResult>({
+  user: null,
+  error: null,
+  loading: true,
+});
