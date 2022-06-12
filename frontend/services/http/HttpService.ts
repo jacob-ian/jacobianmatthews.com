@@ -28,7 +28,7 @@ export class HttpService {
       method,
     };
 
-    if (body) {
+    if (body && method !== "GET") {
       fetchRequest.body = JSON.stringify(body);
     }
 
