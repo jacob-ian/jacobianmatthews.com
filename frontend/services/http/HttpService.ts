@@ -32,9 +32,8 @@ export class HttpService {
       fetchRequest.body = JSON.stringify(body);
     }
 
-    if (headers) {
-      fetchRequest.headers = headers;
-    }
+    fetchRequest.headers = headers || new Headers();
+    fetchRequest.headers.set("Content-Type", "application/json");
 
     const res = await this._fetch(url, fetchRequest);
     if (res.ok) {
