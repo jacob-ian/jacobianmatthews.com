@@ -21,14 +21,13 @@ services:
   
   backend:
     build:
-      context: backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
       target: dev
     volumes:
-      - ./backend:/opt/jacobianmatthews.com/backend
+      - ./backend:/src/jacobianmatthews.com/backend
     environment:
       PORT: 3001
-      FIREBASE_EMULATORS: 'true'
     ports:
       - 3001:3001
 
