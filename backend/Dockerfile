@@ -24,7 +24,7 @@ WORKDIR /src/jacobianmatthews.com
 COPY go.work . 
 WORKDIR /src/jacobianmatthews.com/backend
 COPY backend .
-RUN go build -o bin/backend cmd/backend.go 
+RUN go build -o bin/backend cmd/backend/main.go 
 
 # PRODUCTION ENVIRONMENT
 FROM alpine:3.16 as prod
