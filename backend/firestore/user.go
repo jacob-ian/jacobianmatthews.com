@@ -61,8 +61,23 @@ func (us *UserService) FindAll(ctx context.Context, filter backend.GetUserFilter
 }
 
 // Finds a user by their ID
-func (*UserService) FindById(ctx context.Context, id uuid.UUID) (*backend.User, error) {
-	panic("unimplemented")
+func (us *UserService) FindById(ctx context.Context, id uuid.UUID) (*backend.User, error) {
+	doc, err := us.collection.Doc(id.String()).Get(ctx)
+	if err != nil {
+		return nil, backend.InternalError
+	}
+	if !doc.Exists() {
+		return nil, backend.NotFoundError
+	}
+	var user *backend.User
+	err = doc.DataTo(user)
+	if err != nil {
+		return nil, backend.InternalError
+	}
+	if user.DeletedAt != nil {
+		return nil, backend.NotFoundError
+	}
+	return user, nil
 }
 
 // Creates a user
