@@ -66,6 +66,7 @@ func (*UserService) FindById(ctx context.Context, id uuid.UUID) (*backend.User, 
 }
 
 // Creates a user
+// TODO: Error handling
 func (userService *UserService) Create(ctx context.Context, user backend.NewUser) (*backend.User, error) {
 	newId, err := uuid.NewRandom()
 	if err != nil {
