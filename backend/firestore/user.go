@@ -87,13 +87,13 @@ func (userService *UserService) Create(ctx context.Context, user backend.NewUser
 		return nil, backend.InternalError
 	}
 
-	var newUser backend.User
-	dataToErr := data.DataTo(&newUser)
+	var newUser *backend.User
+	dataToErr := data.DataTo(newUser)
 	if dataToErr != nil {
 		log.Println("DataTo error")
 		return nil, backend.InternalError
 	}
-	return &newUser, nil
+	return newUser, nil
 }
 
 // Updates a user
