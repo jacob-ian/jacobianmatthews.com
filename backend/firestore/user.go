@@ -3,6 +3,7 @@ package firestore
 import (
 	"context"
 	"log"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
@@ -50,12 +51,12 @@ func (us *UserService) FindAll(ctx context.Context, filter backend.GetUserFilter
 	}
 	var data []*backend.User = []*backend.User{}
 	for _, doc := range docs {
-		var user *backend.User
+		var user backend.User
 		error := doc.DataTo(&user)
 		if error != nil {
 			return nil, backend.InternalError
 		}
-		data = append(data, user)
+		data = append(data, &user)
 	}
 	return data, nil
 }
@@ -69,15 +70,15 @@ func (us *UserService) FindById(ctx context.Context, id uuid.UUID) (*backend.Use
 	if !doc.Exists() {
 		return nil, backend.NotFoundError
 	}
-	var user *backend.User
-	err = doc.DataTo(user)
+	var user backend.User
+	err = doc.DataTo(&user)
 	if err != nil {
 		return nil, backend.InternalError
 	}
-	if user.DeletedAt != nil {
+	if &user.DeletedAt != nil {
 		return nil, backend.NotFoundError
 	}
-	return user, nil
+	return &user, nil
 }
 
 // Creates a user
@@ -103,21 +104,38 @@ func (userService *UserService) Create(ctx context.Context, user backend.NewUser
 		return nil, backend.InternalError
 	}
 
-	var newUser *backend.User
-	dataToErr := data.DataTo(newUser)
+	var newUser backend.User
+	dataToErr := data.DataTo(&newUser)
 	if dataToErr != nil {
 		log.Println("DataTo error")
 		return nil, backend.InternalError
 	}
-	return newUser, nil
+	return &newUser, nil
 }
 
 // Updates a user
-func (*UserService) Update(ctx context.Context, user backend.User) (*backend.User, error) {
-	panic("unimplemented")
+func (us *UserService) Update(ctx context.Context, user backend.User) (*backend.User, error) {
+	_, err := us.collection.Doc(user.Id.String()).Set(ctx, user)
+	if err != nil {
+		log.Printf("Couldn't update user: %v", err)
+		return nil, err
+	}
+	doc, err := us.collection.Doc(user.Id.String()).Get(ctx)
+	if err != nil {
+		log.Printf("Couldn't fetch updated user: %v", err)
+		return nil, err
+	}
+	var updatedUser backend.User
+	doc.DataTo(&updatedUser)
+	return &updatedUser, nil
 }
 
 // (Soft) Deletes a user
-func (*UserService) Delete(ctx context.Context, id uuid.UUID) error {
-	panic("unimplemented")
+func (us *UserService) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := us.collection.Doc(id.String()).Set(ctx, backend.User{DeletedAt: time.Now()})
+	if err != nil {
+		log.Printf("Couldn't soft delete user: %v", err)
+		return err
+	}
+	return nil
 }

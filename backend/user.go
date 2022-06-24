@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	Id        uuid.UUID  `json:"id" firestore:"id"`
-	Name      string     `json:"name" firestore:"name"`
-	Email     string     `json:"email" firestore:"email"`
-	ImageUrl  string     `json:"imageUrl" firestore:"imageUrl"`
-	CreatedAt time.Time  `json:"createdAt" firestore:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt" firestore:"updatedAt"`
-	DeletedAt *time.Time `json:"deletedAt" firestore:"deletedAt"`
+	Id        uuid.UUID `json:"id" firestore:"id"`
+	Name      string    `json:"name" firestore:"name"`
+	Email     string    `json:"email" firestore:"email"`
+	ImageUrl  string    `json:"imageUrl" firestore:"imageUrl"`
+	CreatedAt time.Time `json:"createdAt" firestore:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" firestore:"updatedAt"`
+	DeletedAt time.Time `json:"deletedAt" firestore:"deletedAt"`
 }
 
 type UserService interface {
