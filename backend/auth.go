@@ -1,21 +1,23 @@
 package backend
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
-type Session struct {
-	SessionCookie string
-}
+var InvalidToken = errors.New("Invalid ID Token")
+var SignInFail = errors.New("Could not sign in")
+var InvalidSession = errors.New("Invalid Session")
 
-type RequestUser struct {
-	User  *User
-	Admin bool `json:"admin"`
+type SessionCookie string
+
+type SessionUser struct {
+	User  *User `json:"user"`
+	Admin bool  `json:"admin"`
 }
 
 type AuthService interface {
-	CreateSession(idToken string) (*Session, error)
-	RevokeSession(*Session) error
-	GetRequestUser() (*RequestUser, error)
-
-	AddAdminByEmail(email string) error
-	RemoveAdminByEmail(email string) error
+	CreateSession(ctx context.Context, idToken string) (SessionCookie, error)
+	VerifySession(ctx context.Context, session SessionCookie) (SessionUser, error)
+	RevokeSession(ctx context.Context, session SessionCookie) error
 }

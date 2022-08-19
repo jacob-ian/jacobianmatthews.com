@@ -17,7 +17,7 @@ type Error struct {
 	message string
 }
 
-func (e *Error) Error() string {
+func (e Error) Error() string {
 	return fmt.Sprintf("%v: %v", e.code, e.message)
 }
 

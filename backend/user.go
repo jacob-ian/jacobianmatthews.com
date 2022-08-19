@@ -8,20 +8,20 @@ import (
 )
 
 type User struct {
-	Id        uuid.UUID `json:"id" firestore:"id"`
-	Name      string    `json:"name" firestore:"name"`
-	Email     string    `json:"email" firestore:"email"`
-	ImageUrl  string    `json:"imageUrl" firestore:"imageUrl"`
-	CreatedAt time.Time `json:"createdAt" firestore:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt" firestore:"updatedAt"`
-	DeletedAt time.Time `json:"deletedAt" firestore:"deletedAt"`
+	Id        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	ImageUrl  string    `json:"imageUrl"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	DeletedAt time.Time `json:"deletedAt"`
 }
 
 type UserService interface {
-	FindAll(ctx context.Context, filter GetUserFilter) ([]*User, error)
-	FindById(ctx context.Context, id uuid.UUID) (*User, error)
-	Create(ctx context.Context, user NewUser) (*User, error)
-	Update(ctx context.Context, user User) (*User, error)
+	FindAll(ctx context.Context, filter UserFilter) ([]User, error)
+	FindById(ctx context.Context, id uuid.UUID) (User, error)
+	Create(ctx context.Context, user NewUser) (User, error)
+	Update(ctx context.Context, user User) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -31,7 +31,7 @@ type NewUser struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-type GetUserFilter struct {
+type UserFilter struct {
 	Id     *uuid.UUID `json:"id"`
 	Name   *string    `json:"name"`
 	Email  *string    `json:"email"`

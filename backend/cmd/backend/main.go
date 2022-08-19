@@ -1,38 +1,47 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-)
 
-type Response struct {
-	Message string `json:"message"`
-}
+	firebase "firebase.google.com/go"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/firebaseauth"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/postgres"
+)
 
 var Port int
 
 func main() {
-	Port := getPort()
-	mux := http.NewServeMux()
-	handlerA := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			http.NotFound(w, r)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Response{Message: "Success"})
-	})
-	handlerB := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Yo"))
-	})
-	mux.Handle("/", loggerMiddleware(handlerB))
+	ctx := context.Background()
 
-	mux.Handle("/api", loggerMiddleware(handlerA))
-	log.Printf("Listening on Port %v\n", Port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(Port), mux))
+	dbConnStr := os.Getenv("DB_CONNECTION_STRING")
+	database, err := postgres.NewDatabaseClient(ctx, dbConnStr)
+	if err != nil {
+		log.Fatalf("Could not create database client: %v", err.Error())
+	}
+
+	defer database.Close()
+
+	authService, err := newFirebaseAuthService(ctx, database)
+	if err != nil {
+		log.Fatalf("Could not create auth service: %v", err.Error())
+	}
+}
+
+func newFirebaseAuthService(ctx context.Context, database *postgres.Database) (*firebaseauth.AuthService, error) {
+	firebaseApp, err := firebase.NewApp(ctx, nil)
+	if err != nil {
+		log.Fatalf("Could not connect to Firebase Admin: %v", err.Error())
+	}
+
+	authService, err := firebaseauth.NewAuthService(ctx, firebaseApp, database)
+	if err != nil {
+		log.Fatalf("Could not create Auth Service: %v", err.Error())
+	}
+	return authService, nil
 }
 
 func getPort() int {
