@@ -2,18 +2,13 @@ package backend
 
 import (
 	"context"
-	"errors"
 )
-
-var InvalidToken = errors.New("Invalid ID Token")
-var SignInFail = errors.New("Could not sign in")
-var InvalidSession = errors.New("Invalid Session")
 
 type SessionCookie string
 
 type SessionUser struct {
-	User  *User `json:"user"`
-	Admin bool  `json:"admin"`
+	User  User `json:"user"`
+	Admin bool `json:"admin"`
 }
 
 type AuthService interface {

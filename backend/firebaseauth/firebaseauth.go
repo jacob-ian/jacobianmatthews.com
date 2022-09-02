@@ -53,9 +53,6 @@ func (auth *AuthService) VerifySession(ctx context.Context, session backend.Sess
 	if err != nil {
 		return backend.SessionUser{}, backend.NewError(backend.InternalError, "An error occurred")
 	}
-	if user == nil {
-		return backend.SessionUser{}, backend.NewError(backend.UnauthenticatedError, "Unauthenticated")
-	}
 
 	return backend.SessionUser{
 		Admin: isAdmin,
@@ -67,11 +64,20 @@ func (auth *AuthService) RevokeSession(ctx context.Context, session backend.Sess
 	return backend.NewError(backend.InternalError, "Not implemented")
 }
 
-func NewAuthService(ctx context.Context, firebaseApp *firebase.App, database *postgres.Database) (*AuthService, error) {
+var _ backend.AuthService = (*AuthService)(nil)
+
+// Creates a Firebase Auth implementation of AuthService
+func NewAuthService(ctx context.Context, database *postgres.Database) (*AuthService, error) {
+	firebaseApp, err := firebase.NewApp(ctx, nil)
+	if err != nil {
+		return nil, backend.NewError(backend.InternalError, "Could not create Firebase App")
+	}
+
 	authClient, err := firebaseApp.Auth(ctx)
 	if err != nil {
-		return &AuthService{}, err
+		return nil, backend.NewError(backend.InternalError, "Could not create Firebase Auth Client")
 	}
+
 	return &AuthService{
 		client:   authClient,
 		database: database,

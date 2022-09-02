@@ -1,3 +1,4 @@
+version: "3"
 services:
   frontend:
     build:
@@ -8,17 +9,17 @@ services:
       - ./frontend:/opt/jacobianmatthews.com/frontend
       - /opt/jacobianmatthews.com/frontend/node_modules
     environment:
-      PORT: 3000
-      NODE_ENV: development
-      FIREBASE_AUTH_EMULATOR_HOST: http://emulators:9099
-      FIREBASE_PROJECT_ID: jacobianmatthews-com
-      BACKEND_URL: http://backend:3001
+      - PORT=3000
+      - NODE_ENV=development
+      - FIREBASE_AUTH_EMULATOR_HOST=http://emulators:9099
+      - FIREBASE_PROJECT_ID=jacobianmatthews-com
+      - BACKEND_URL=http://backend:3001
     ports:
       - 3000:3000
     depends_on:
       - backend
       - emulators
-  
+
   backend:
     build:
       context: .
@@ -26,12 +27,25 @@ services:
       target: dev
     volumes:
       - ./backend:/src/jacobianmatthews.com/backend
+      - ./backend/key.json:/run/secrets/google-service-account.json
     environment:
-      PORT: 3001
+      - PORT=3001
+      - DB_CONNECTION_STRING=postgres://backend:password@db/backend?sslmode=verify-full
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-service-account.json
     ports:
       - 3001:3001
     depends_on:
       - emulators
+      - db
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=backend
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=backend
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
 
   emulators:
     build:

@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// A PostgreSQL database
+// A PostgreSQL database implementation
 type Database struct {
 	db          *sql.DB
 	UserService *UserService
@@ -23,9 +23,12 @@ func (db *Database) Close() error {
 
 // Create a new PostgreSQL database client
 func NewDatabaseClient(ctx context.Context, connStr string) (*Database, error) {
+	if connStr == "" {
+		return nil, backend.NewError(backend.InternalError, "Missing database connection string")
+	}
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		return nil, backend.NewError(backend.InternalError, fmt.Sprintf("Could not connect to PostgreSQL: %v", err))
+		return nil, backend.NewError(backend.InternalError, fmt.Sprintf("Could not connect to PostgreSQL: %v", err.Error()))
 	}
 
 	log.Println("Connected to PostgreSQL")

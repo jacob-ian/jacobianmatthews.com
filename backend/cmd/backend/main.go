@@ -3,62 +3,51 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 
-	firebase "firebase.google.com/go"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/firebaseauth"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/postgres"
 )
 
-var Port int
-
 func main() {
+	log.Printf("\n--------\njacobianmatthews.com/api - Copyright © Jacob Ian Matthews\n--------")
 	ctx := context.Background()
 
-	dbConnStr := os.Getenv("DB_CONNECTION_STRING")
-	database, err := postgres.NewDatabaseClient(ctx, dbConnStr)
+	db, err := postgres.NewDatabaseClient(ctx, os.Getenv("DB_CONNECTION_STRING"))
 	if err != nil {
 		log.Fatalf("Could not create database client: %v", err.Error())
 	}
+	defer db.Close()
 
-	defer database.Close()
-
-	authService, err := newFirebaseAuthService(ctx, database)
+	auth, err := firebaseauth.NewAuthService(ctx, db)
 	if err != nil {
 		log.Fatalf("Could not create auth service: %v", err.Error())
 	}
-}
 
-func newFirebaseAuthService(ctx context.Context, database *postgres.Database) (*firebaseauth.AuthService, error) {
-	firebaseApp, err := firebase.NewApp(ctx, nil)
+	app, err := http.NewApplication(ctx, http.Config{
+		Port:        getPort(),
+		Database:    db,
+		AuthService: auth,
+	})
 	if err != nil {
-		log.Fatalf("Could not connect to Firebase Admin: %v", err.Error())
+		log.Fatalf("Could not create HTTP Application: %v", err.Error())
 	}
 
-	authService, err := firebaseauth.NewAuthService(ctx, firebaseApp, database)
-	if err != nil {
-		log.Fatalf("Could not create Auth Service: %v", err.Error())
-	}
-	return authService, nil
+	log.Fatal(app.Serve())
+	defer app.Shutdown(ctx)
 }
 
-func getPort() int {
+func getPort() uint16 {
 	portEnv, exists := os.LookupEnv("PORT")
 	if !exists {
-		log.Fatalln("Missing PORT environment variable")
+		return 3001
 	}
 	port, err := strconv.ParseUint(portEnv, 10, 16)
 	if err != nil {
-		log.Fatalln("Invalid PORT environment variable")
+		log.Println("Invalid PORT variable, using default.")
+		return 3001
 	}
-	return int(port)
-}
-
-func loggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
-		log.Printf("%v %v %v %v", r.Method, r.URL.Path, w.Header().Values("*"), r.UserAgent())
-	})
+	return uint16(port)
 }
