@@ -41,10 +41,13 @@ func (a *Application) Shutdown(ctx context.Context) error {
 // Creates a new HTTP Applicaton
 func NewApplication(ctx context.Context, config Config) (*Application, error) {
 	mux := http.NewServeMux()
+	handler := NewRequestMiddleware(mux, RequestFilter{ContentType: "application/json"})
+
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),
-		Handler: mux,
+		Handler: handler,
 	}
+
 	app := &Application{
 		database:    config.Database,
 		authService: config.AuthService,
@@ -52,5 +55,6 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		router:      mux,
 	}
 	app.connectControllers(ctx)
+
 	return app, nil
 }
