@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
 )
@@ -27,8 +28,16 @@ func writeError(w http.ResponseWriter, description string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	error := ErrorResponse{
-		Error:            http.StatusText(statusCode),
+		Error:            GetStatusError(statusCode),
 		ErrorDescription: description,
 	}
 	json.NewEncoder(w).Encode(error)
+}
+
+// Returns the formatted text error for a status code
+func GetStatusError(code int) string {
+	text := http.StatusText(code)
+	lowercase := strings.ToLower(text)
+	underscore := strings.ReplaceAll(lowercase, " ", "_")
+	return underscore
 }
