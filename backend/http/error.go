@@ -20,7 +20,6 @@ func HandleError(w http.ResponseWriter, e error) {
 		return
 	}
 	writeError(w, err.GetMessage(), err.GetCode())
-	return
 }
 
 // Responds with a JSON error
