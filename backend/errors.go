@@ -2,18 +2,16 @@ package backend
 
 import "fmt"
 
-type HttpStatusCode int16
-
 const (
-	InternalError        HttpStatusCode = 500
-	NotFoundError        HttpStatusCode = 404
-	ForbiddenError       HttpStatusCode = 403
-	UnauthenticatedError HttpStatusCode = 401
-	BadRequestError      HttpStatusCode = 400
+	InternalError        int = 500
+	NotFoundError        int = 404
+	ForbiddenError       int = 403
+	UnauthenticatedError int = 401
+	BadRequestError      int = 400
 )
 
 type Error struct {
-	code    HttpStatusCode
+	code    int
 	message string
 }
 
@@ -21,7 +19,15 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%v: %v", e.code, e.message)
 }
 
-func NewError(code HttpStatusCode, message string) Error {
+func (e Error) GetCode() int {
+	return e.code
+}
+
+func (e Error) GetMessage() string {
+	return e.message
+}
+
+func NewError(code int, message string) Error {
 	return Error{
 		code:    code,
 		message: message,
