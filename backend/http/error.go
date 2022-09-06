@@ -24,8 +24,8 @@ func HandleError(w http.ResponseWriter, e error) {
 
 // Responds with a JSON error
 func writeError(w http.ResponseWriter, description string, statusCode int) {
-	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	error := ErrorResponse{
 		Error:            http.StatusText(statusCode),
 		ErrorDescription: description,
