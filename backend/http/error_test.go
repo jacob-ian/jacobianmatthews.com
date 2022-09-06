@@ -3,6 +3,7 @@ package http_test
 import (
 	nethttp "net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
@@ -23,7 +24,7 @@ func TestHandleErrorCustom(t *testing.T) {
 
 	expected := `{"error":"unauthorized","error_description":"An error occurred"}`
 	body := recorder.Body.String()
-	if body != expected {
+	if strings.Compare(body, expected) == 0 {
 		t.Errorf("Error handler returned incorrect body: got %v want %v", body, expected)
 	}
 }
