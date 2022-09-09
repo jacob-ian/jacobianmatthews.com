@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/json"
 )
 
 type logInPayload struct {
@@ -36,7 +37,7 @@ func handleLogin(auth backend.AuthService) http.HandlerFunc {
 			return
 		}
 		payload := &logInPayload{}
-		err := NewJsonDecoder(r.Body).Decode(payload)
+		err := json.NewJsonDecoder(r.Body).Decode(payload)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
