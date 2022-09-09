@@ -41,7 +41,6 @@ func (a *Application) Shutdown(ctx context.Context) error {
 // Creates a new HTTP Applicaton
 func NewApplication(ctx context.Context, config Config) (*Application, error) {
 	mux := http.NewServeMux()
-
 	handler := NewGlobalMiddleware(mux, GlobalMiddlewareConfig{
 		CorsOrigin: "localhost:3001",
 		Accept:     "application/json, application/grpc-web",

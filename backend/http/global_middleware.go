@@ -28,7 +28,7 @@ func (m *GlobalMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.writeResponseHeaders(w)
 	e := m.checkRequestHeaders(r)
 	if e != nil {
-		HandleError(w, e)
+		NewResponseWriter(w, r).HandleError(e)
 		return
 	}
 	m.handler.ServeHTTP(w, r)
