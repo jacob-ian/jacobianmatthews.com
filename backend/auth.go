@@ -17,6 +17,6 @@ type SessionUser struct {
 
 type AuthService interface {
 	CreateSession(ctx context.Context, idToken string) (Session, error)
-	VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error)
+	VerifySession(ctx context.Context, sessionCookie string) (*SessionUser, error)
 	RevokeSession(ctx context.Context, sessionCookie string) error
 }

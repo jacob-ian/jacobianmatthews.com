@@ -36,8 +36,7 @@ func handleLogin(auth backend.AuthService) http.HandlerFunc {
 			return
 		}
 		payload := &logInPayload{}
-		dec := NewJsonDecoder(r.Body)
-		err := dec.Decode(payload)
+		err := NewJsonDecoder(r.Body).Decode(payload)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return

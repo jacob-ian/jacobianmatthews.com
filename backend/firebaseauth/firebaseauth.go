@@ -21,6 +21,7 @@ func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (bac
 	if err != nil {
 		return backend.Session{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
+
 	if time.Now().Unix()-decodedToken.Claims["auth_time"].(int64) > 5*60 {
 		return backend.Session{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
@@ -36,15 +37,15 @@ func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (bac
 	}, nil
 }
 
-func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (backend.SessionUser, error) {
+func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (*backend.SessionUser, error) {
 	decodedToken, err := auth.client.VerifySessionCookieAndCheckRevoked(ctx, cookie)
 	if err != nil {
-		return backend.SessionUser{}, backend.NewError(backend.UnauthenticatedError, "Invalid session")
+		return nil, backend.NewError(backend.UnauthenticatedError, "Invalid session")
 	}
 
 	userId, err := uuid.Parse(decodedToken.UID)
 	if err != nil {
-		return backend.SessionUser{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
+		return nil, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
 
 	isAdmin := false
@@ -54,10 +55,10 @@ func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (back
 
 	user, err := auth.database.UserService.FindById(ctx, userId)
 	if err != nil {
-		return backend.SessionUser{}, backend.NewError(backend.InternalError, "An error occurred")
+		return nil, backend.NewError(backend.InternalError, "An error occurred")
 	}
 
-	return backend.SessionUser{
+	return &backend.SessionUser{
 		Admin: isAdmin,
 		User:  user,
 	}, nil
