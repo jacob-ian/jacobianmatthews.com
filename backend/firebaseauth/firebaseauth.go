@@ -16,25 +16,28 @@ type AuthService struct {
 	database *postgres.Database
 }
 
-func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (backend.SessionCookie, error) {
+func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (backend.Session, error) {
 	decodedToken, err := auth.client.VerifyIDToken(ctx, idToken)
 	if err != nil {
-		return "", backend.NewError(backend.BadRequestError, "Invalid ID Token")
+		return backend.Session{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
 	if time.Now().Unix()-decodedToken.Claims["auth_time"].(int64) > 5*60 {
-		return "", backend.NewError(backend.BadRequestError, "Invalid ID Token")
+		return backend.Session{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
 
 	sessionExpiresIn := time.Minute * 15
 	cookie, err := auth.client.SessionCookie(ctx, idToken, sessionExpiresIn)
 	if err != nil {
-		return "", backend.NewError(backend.InternalError, "An error occurred whilst signing in")
+		return backend.Session{}, backend.NewError(backend.InternalError, "An error occurred whilst signing in")
 	}
-	return backend.SessionCookie(cookie), nil
+	return backend.Session{
+		Cookie:    cookie,
+		ExpiresIn: sessionExpiresIn,
+	}, nil
 }
 
-func (auth *AuthService) VerifySession(ctx context.Context, session backend.SessionCookie) (backend.SessionUser, error) {
-	decodedToken, err := auth.client.VerifySessionCookieAndCheckRevoked(ctx, string(session))
+func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (backend.SessionUser, error) {
+	decodedToken, err := auth.client.VerifySessionCookieAndCheckRevoked(ctx, cookie)
 	if err != nil {
 		return backend.SessionUser{}, backend.NewError(backend.UnauthenticatedError, "Invalid session")
 	}
@@ -60,7 +63,7 @@ func (auth *AuthService) VerifySession(ctx context.Context, session backend.Sess
 	}, nil
 }
 
-func (auth *AuthService) RevokeSession(ctx context.Context, session backend.SessionCookie) error {
+func (auth *AuthService) RevokeSession(ctx context.Context, session string) error {
 	return backend.NewError(backend.InternalError, "Not implemented")
 }
 

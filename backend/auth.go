@@ -2,9 +2,13 @@ package backend
 
 import (
 	"context"
+	"time"
 )
 
-type SessionCookie string
+type Session struct {
+	Cookie    string
+	ExpiresIn time.Duration
+}
 
 type SessionUser struct {
 	User  User `json:"user"`
@@ -12,7 +16,7 @@ type SessionUser struct {
 }
 
 type AuthService interface {
-	CreateSession(ctx context.Context, idToken string) (SessionCookie, error)
-	VerifySession(ctx context.Context, session SessionCookie) (SessionUser, error)
-	RevokeSession(ctx context.Context, session SessionCookie) error
+	CreateSession(ctx context.Context, idToken string) (Session, error)
+	VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error)
+	RevokeSession(ctx context.Context, sessionCookie string) error
 }
