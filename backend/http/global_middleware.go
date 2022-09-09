@@ -8,8 +8,8 @@ import (
 )
 
 type Header struct {
-	name  string
-	value string
+	Name  string
+	Value string
 }
 
 type GlobalMiddlewareConfig struct {
@@ -37,26 +37,22 @@ func (m *GlobalMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (m *GlobalMiddleware) writeResponseHeaders(w http.ResponseWriter) {
 	responseHeaders := append(
 		m.config.ResponseHeaders,
-		Header{name: "Accept", value: m.config.Accept},
-		Header{name: "Access-Control-Allow-Origin", value: m.config.CorsOrigin},
+		Header{Name: "Accept", Value: m.config.Accept},
+		Header{Name: "Access-Control-Allow-Origin", Value: m.config.CorsOrigin},
 	)
 	for _, header := range responseHeaders {
-		w.Header().Set(header.name, header.value)
+		w.Header().Set(header.Name, header.Value)
 	}
 }
 
 func (m *GlobalMiddleware) checkRequestHeaders(r *http.Request) error {
-	requiredHeaders := append(
-		m.config.RequiredHeaders,
-	)
-
 	err := checkContentType(r, m.config.Accept)
 	if err != nil {
 		return err
 	}
 
-	for _, required := range requiredHeaders {
-		if r.Header.Get(required.name) == required.value {
+	for _, required := range m.config.RequiredHeaders {
+		if r.Header.Get(required.Name) == required.Value {
 			break
 		}
 		return backend.NewError(backend.BadRequestError, "Invalid Request")
