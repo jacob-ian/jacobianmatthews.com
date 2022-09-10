@@ -110,5 +110,4 @@ func TestValidSessionUserContext(t *testing.T) {
 	if status != nethttp.StatusOK {
 		t.Errorf("Unexpected status code: got %v want %v", status, nethttp.StatusOK)
 	}
-
 }
