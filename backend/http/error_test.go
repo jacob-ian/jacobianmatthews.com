@@ -14,7 +14,7 @@ import (
 func TestHandleErrorCustom(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	err := backend.NewError(nethttp.StatusUnauthorized, "An error occurred")
-	http.HandleError(recorder, err)
+	http.NewResponseWriter(recorder, &nethttp.Request{}).HandleError(err)
 
 	res := recorder.Result()
 	status := res.StatusCode
@@ -33,7 +33,7 @@ func TestHandleErrorCustom(t *testing.T) {
 func TestHandleErrorUnknown(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	err := errors.New("Something happened")
-	http.HandleError(recorder, err)
+	http.NewResponseWriter(recorder, &nethttp.Request{}).HandleError(err)
 
 	res := recorder.Result()
 	status := res.StatusCode

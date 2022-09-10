@@ -16,12 +16,12 @@ type requestConfig struct {
 	Body    io.Reader
 }
 
-type testConfig struct {
+type gmTestConfig struct {
 	Middleware http.GlobalMiddlewareConfig
 	Request    requestConfig
 }
 
-func setupTest(config testConfig) *httptest.ResponseRecorder {
+func setupGlobalMiddlewareTest(config gmTestConfig) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	h := nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
 		w.WriteHeader(200)
@@ -37,7 +37,7 @@ func setupTest(config testConfig) *httptest.ResponseRecorder {
 }
 
 func TestWriteResponseHeaders(t *testing.T) {
-	rr := setupTest(testConfig{
+	rr := setupGlobalMiddlewareTest(gmTestConfig{
 		Middleware: http.GlobalMiddlewareConfig{
 			CorsOrigin:      "abcd",
 			Accept:          "application/json",
@@ -69,7 +69,7 @@ func TestWriteResponseHeaders(t *testing.T) {
 }
 
 func TestCheckAcceptedContentTypeCorrect(t *testing.T) {
-	rr := setupTest(testConfig{
+	rr := setupGlobalMiddlewareTest(gmTestConfig{
 		Middleware: http.GlobalMiddlewareConfig{
 			CorsOrigin:      "abcd",
 			Accept:          "application/json, application/grpc-web",
@@ -89,7 +89,7 @@ func TestCheckAcceptedContentTypeCorrect(t *testing.T) {
 }
 
 func TestCheckAcceptedContentTypeBad(t *testing.T) {
-	rr := setupTest(testConfig{
+	rr := setupGlobalMiddlewareTest(gmTestConfig{
 		Middleware: http.GlobalMiddlewareConfig{
 			CorsOrigin:      "abcd",
 			Accept:          "application/json, application/grpc-web",
@@ -109,7 +109,7 @@ func TestCheckAcceptedContentTypeBad(t *testing.T) {
 }
 
 func TestCheckRequestHeadersMissing(t *testing.T) {
-	rr := setupTest(testConfig{
+	rr := setupGlobalMiddlewareTest(gmTestConfig{
 		Middleware: http.GlobalMiddlewareConfig{
 			CorsOrigin:      "abcd",
 			Accept:          "application/json, application/grpc-web",
@@ -129,7 +129,7 @@ func TestCheckRequestHeadersMissing(t *testing.T) {
 }
 
 func TestCheckRequestHeadersPresent(t *testing.T) {
-	rr := setupTest(testConfig{
+	rr := setupGlobalMiddlewareTest(gmTestConfig{
 		Middleware: http.GlobalMiddlewareConfig{
 			CorsOrigin:      "abcd",
 			Accept:          "application/json, application/grpc-web",
