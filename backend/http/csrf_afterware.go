@@ -8,10 +8,10 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
 )
 
-type CsrfMiddleware struct {
+type CsrfAfterware struct {
 }
 
-func (m *CsrfMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
+func (m *CsrfAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	token := make([]byte, 16)
 	_, err := rand.Read(token)
 	if err != nil {
@@ -25,6 +25,6 @@ func (m *CsrfMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-func NewCsrfAfterware() *CsrfMiddleware {
-	return &CsrfMiddleware{}
+func NewCsrfAfterware() *CsrfAfterware {
+	return &CsrfAfterware{}
 }
