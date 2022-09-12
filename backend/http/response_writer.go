@@ -40,7 +40,7 @@ func (w *ResponseWriter) Write(statusCode int, res any) {
 func (w *ResponseWriter) HandleError(e error) {
 	err, ok := e.(backend.Error)
 	if !ok {
-		w.WriteError(err.Error(), http.StatusBadRequest)
+		w.WriteError(err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteError(err.GetMessage(), err.GetCode())
