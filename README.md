@@ -7,8 +7,3 @@ To stand up the local environment:
 2. `cd jacobianmatthews.com`
 3. `docker-compose up`
 
-## Development
-To make use of the formatter, install Prettier for VSCode:
-```
-ext install esbenp.prettier-vscode
-```
