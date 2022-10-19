@@ -85,7 +85,7 @@ func handleLogout(auth backend.AuthService) http.HandlerFunc {
 			return
 		}
 
-		err := auth.RevokeSession(r.Context(), user.User.Id.String())
+		err := auth.RevokeSession(r.Context(), user.User.Id)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
