@@ -4,6 +4,7 @@ import "fmt"
 
 const (
 	InternalError        int = 500
+	NotImplemented       int = 501
 	NotFoundError        int = 404
 	ForbiddenError       int = 403
 	UnauthenticatedError int = 401
@@ -25,6 +26,10 @@ func (e Error) GetCode() int {
 
 func (e Error) GetMessage() string {
 	return e.message
+}
+
+func (e Error) Is(code int) bool {
+	return e.code == code
 }
 
 func NewError(code int, message string) Error {

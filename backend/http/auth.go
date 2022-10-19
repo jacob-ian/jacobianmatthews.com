@@ -78,12 +78,14 @@ func handleLogout(auth backend.AuthService) http.HandlerFunc {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		cookie, err := r.Cookie("session")
-		if err != nil {
+
+		user, ok := UserFromContext(r.Context())
+		if !ok {
 			NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return
 		}
-		err = auth.RevokeSession(r.Context(), cookie.Value)
+
+		err := auth.RevokeSession(r.Context(), user.User.Id.String())
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
@@ -114,7 +116,6 @@ func handleMe(auth backend.AuthService) http.HandlerFunc {
 			NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return
 		}
-
 		NewResponseWriter(w, r).Write(http.StatusOK, user)
 	}
 }

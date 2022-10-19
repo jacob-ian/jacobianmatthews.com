@@ -68,6 +68,6 @@ func NewResponseWriter(w http.ResponseWriter, r *http.Request) *ResponseWriter {
 	return &ResponseWriter{
 		writer:    w,
 		request:   r,
-		afterware: []Afterware{NewCsrfAfterware()},
+		afterware: []Afterware{NewCsrfAfterware(), NewAuthAfterware()},
 	}
 }

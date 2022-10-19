@@ -21,7 +21,9 @@ func main() {
 	}
 	defer db.Close()
 
-	auth, err := firebaseauth.NewAuthService(ctx, db)
+	auth, err := firebaseauth.NewAuthService(ctx, firebaseauth.AuthServiceConfig{
+		UserService: db.UserService,
+	})
 	if err != nil {
 		log.Fatalf("Could not create auth service: %v", err.Error())
 	}
