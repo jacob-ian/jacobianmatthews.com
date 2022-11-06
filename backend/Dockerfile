@@ -1,6 +1,10 @@
 # MUST BE BUILT WITH ROOT CONTEXT
 # DEVELOPMENT ENVIRONMENT
-FROM golang:1.18-alpine as dev
+FROM golang:1.19-alpine as dev
+RUN apk add --update make
+
+RUN go install github.com/cosmtrek/air@latest
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 WORKDIR /src/jacobianmatthews.com
 COPY go.work . 
@@ -8,18 +12,16 @@ COPY go.work .
 WORKDIR /src/jacobianmatthews.com/backend
 COPY backend .
 
-RUN go install github.com/cosmtrek/air@latest
-
 CMD ["air"]
 
 # TESTING ENVIRONMENT
-FROM golang:1.18-alpine as test
+FROM golang:1.19-alpine as test
 WORKDIR /src/jacobianmatthews.com/backend
 COPY backend .
 RUN go test ./..
 
 # BUILD ENVIRONMENT
-FROM golang:1.18-alpine as build
+FROM golang:1.19-alpine as build
 WORKDIR /src/jacobianmatthews.com
 COPY go.work . 
 WORKDIR /src/jacobianmatthews.com/backend

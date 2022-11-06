@@ -28,7 +28,7 @@ func (e Error) GetMessage() string {
 	return e.message
 }
 
-func (e Error) Is(code int) bool {
+func (e Error) IsError(code int) bool {
 	return e.code == code
 }
 

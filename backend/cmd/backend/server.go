@@ -21,6 +21,14 @@ func main() {
 	}
 	defer db.Close()
 
+	env := os.Getenv("ENVIRONMENT")
+	if env == "production" {
+		err := db.RunMigrations()
+		if err != nil {
+			log.Fatalf("Could not run database migrations: %v", err.Error())
+		}
+	}
+
 	auth, err := firebaseauth.NewAuthService(ctx, firebaseauth.AuthServiceConfig{
 		UserService: db.UserService,
 	})

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
 )
@@ -14,7 +13,7 @@ func TestAttachUserContext(t *testing.T) {
 	user := &backend.SessionUser{
 		Admin: true,
 		User: backend.User{
-			Id:        uuid.UUID{},
+			Id:        "id",
 			Name:      "lolname",
 			Email:     "lol@email",
 			ImageUrl:  "img",
@@ -37,7 +36,7 @@ func TestUserFromContextExists(t *testing.T) {
 	user := &backend.SessionUser{
 		Admin: true,
 		User: backend.User{
-			Id:        uuid.UUID{},
+			Id:        "id",
 			Name:      "lolname",
 			Email:     "lol@email",
 			ImageUrl:  "img",
