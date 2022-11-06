@@ -30,7 +30,7 @@ services:
       - ./backend/key.json:/run/secrets/google-service-account.json
     environment:
       - PORT=3001
-      - DB_CONNECTION_STRING=postgres://backend:password@db/backend?sslmode=verify-full
+      - DB_CONNECTION_STRING=postgres://backend:password@db/backend?sslmode=disable
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-service-account.json
     ports:
       - 3001:3001
@@ -46,6 +46,8 @@ services:
       - POSTGRES_DB=backend
     volumes:
       - ./db/data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
 
   emulators:
     build:
