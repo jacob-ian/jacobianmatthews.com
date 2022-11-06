@@ -6,14 +6,14 @@ import (
 )
 
 type User struct {
-	Id            string    `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	EmailVerified bool      `json:"emailVerified"`
-	ImageUrl      string    `json:"imageUrl"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	DeletedAt     time.Time `json:"deletedAt"`
+	Id            string    `json:"id" field:"id"`
+	Name          string    `json:"name" field:"name"`
+	Email         string    `json:"email" field:"email"`
+	EmailVerified bool      `json:"emailVerified" field:"email_verified"`
+	ImageUrl      string    `json:"imageUrl" field:"image_url"`
+	CreatedAt     time.Time `json:"createdAt" field:"created_at"`
+	UpdatedAt     time.Time `json:"updatedAt" field:"updated_at"`
+	DeletedAt     time.Time `json:"deletedAt" field:"deleted_at"`
 }
 
 type UserService interface {

@@ -13,7 +13,15 @@ type UserService struct {
 }
 
 func (us *UserService) FindById(ctx context.Context, id string) (backend.User, error) {
-	return backend.User{}, backend.NewError(backend.InternalError, "Not implemented")
+	var user backend.User
+	err := us.db.QueryRow("SELECT * from users WHERE id = $1", id).Scan(&user)
+	if err != nil {
+		return backend.User{}, backend.NewError(backend.InternalError, "An error occurred")
+	}
+	if user == (backend.User{}) {
+		return backend.User{}, backend.NewError(backend.NotFoundError, "User cannot be found")
+	}
+	return user, nil
 }
 
 func (us *UserService) FindAll(ctx context.Context, filter backend.UserFilter) ([]backend.User, error) {
