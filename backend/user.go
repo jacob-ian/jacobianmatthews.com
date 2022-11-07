@@ -25,6 +25,7 @@ type UserService interface {
 }
 
 type NewUser struct {
+	Id            string `json:"id"`
 	Name          string `json:"name"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"emailVerified"`
@@ -32,9 +33,8 @@ type NewUser struct {
 }
 
 type UserFilter struct {
-	Id     *string `json:"id"`
-	Name   *string `json:"name"`
-	Email  *string `json:"email"`
-	Limit  *int    `json:"limit"`
-	Offset *int    `json:"offset"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
 }
