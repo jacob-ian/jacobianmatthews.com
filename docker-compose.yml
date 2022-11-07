@@ -11,14 +11,14 @@ services:
     environment:
       - PORT=3000
       - NODE_ENV=development
-      - FIREBASE_AUTH_EMULATOR_HOST=http://emulators:9099
+      - FIREBASE_AUTH_EMULATOR_HOST=http://firebase:9099
       - FIREBASE_PROJECT_ID=jacobianmatthews-com
       - BACKEND_URL=http://backend:3001
     ports:
       - 3000:3000
     depends_on:
       - backend
-      - emulators
+      - firebase
 
   backend:
     build:
@@ -35,7 +35,7 @@ services:
     ports:
       - 3001:3001
     depends_on:
-      - emulators
+      - firebase
       - db
 
   db:
@@ -49,13 +49,14 @@ services:
     ports:
       - 5432:5432
 
-  emulators:
-    image: spine3/firebase-emulator
-    env_file: emulators/.env
+  firebase:
+    build:
+      context: firebase
+      dockerfile: Dockerfile
+    env_file: firebase/.env
     volumes:
-      - ./emulators/data:/firebase/baseline-data
-      - ./.firebaserc:/firebase/.firebaserc
-      - ./firebase.json:/firebase/firebase.json
+      - ./firebase/.firebaserc:/firebase/.firebaserc
+      - ./firebase/firebase.json:/firebase/firebase.json
     ports:
       - 9099:9099
       - 4000:4000
