@@ -9,18 +9,18 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend"
 )
 
-type AuthServiceConfig struct {
+type SessionServiceConfig struct {
 	UserService backend.UserService
 }
 
-type AuthService struct {
+type SessionService struct {
 	client      *auth.Client
 	userService backend.UserService
 }
 
 // Creates a session from a Firebase Auth ID Token
-func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (backend.Session, error) {
-	decodedToken, err := auth.client.VerifyIDToken(ctx, idToken)
+func (ss *SessionService) CreateSession(ctx context.Context, idToken string) (backend.Session, error) {
+	decodedToken, err := ss.client.VerifyIDToken(ctx, idToken)
 	if err != nil {
 		return backend.Session{}, backend.NewError(backend.BadRequestError, "Invalid ID Token")
 	}
@@ -29,13 +29,13 @@ func (auth *AuthService) CreateSession(ctx context.Context, idToken string) (bac
 		return backend.Session{}, backend.NewError(backend.UnauthenticatedError, "Unauthenticated")
 	}
 
-	_, err = auth.findOrCreateUser(ctx, decodedToken)
+	_, err = ss.findOrCreateUser(ctx, decodedToken)
 	if err != nil {
 		return backend.Session{}, err
 	}
 
 	sessionExpiresIn := time.Minute * 15
-	cookie, err := auth.client.SessionCookie(ctx, idToken, sessionExpiresIn)
+	cookie, err := ss.client.SessionCookie(ctx, idToken, sessionExpiresIn)
 	if err != nil {
 		return backend.Session{}, backend.NewError(backend.InternalError, "An error occurred whilst signing in")
 	}
@@ -53,9 +53,9 @@ func authenticatedWithin(token *auth.Token, duration time.Duration) bool {
 }
 
 // Finds the associated user or creates one
-func (auth *AuthService) findOrCreateUser(ctx context.Context, token *auth.Token) (backend.User, error) {
+func (ss *SessionService) findOrCreateUser(ctx context.Context, token *auth.Token) (backend.User, error) {
 	createUser := false
-	user, err := auth.userService.FindById(ctx, token.UID)
+	user, err := ss.userService.FindById(ctx, token.UID)
 	if err != nil {
 		if e, ok := err.(*backend.Error); ok {
 			if e.IsError(backend.NotFoundError) {
@@ -71,12 +71,12 @@ func (auth *AuthService) findOrCreateUser(ctx context.Context, token *auth.Token
 		return user, nil
 	}
 
-	fUser, err := auth.client.GetUser(ctx, token.UID)
+	fUser, err := ss.client.GetUser(ctx, token.UID)
 	if err != nil {
 		return backend.User{}, backend.NewError(backend.InternalError, "Invalid User ID")
 	}
 
-	user, err = auth.userService.Create(ctx, backend.NewUser{
+	user, err = ss.userService.Create(ctx, backend.NewUser{
 		Id:            fUser.UID,
 		Name:          fUser.DisplayName,
 		Email:         fUser.Email,
@@ -91,8 +91,8 @@ func (auth *AuthService) findOrCreateUser(ctx context.Context, token *auth.Token
 }
 
 // Verifies a session
-func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (*backend.SessionUser, error) {
-	decodedToken, err := auth.client.VerifySessionCookieAndCheckRevoked(ctx, cookie)
+func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*backend.SessionUser, error) {
+	decodedToken, err := ss.client.VerifySessionCookieAndCheckRevoked(ctx, cookie)
 	if err != nil {
 		return nil, backend.NewError(backend.UnauthenticatedError, "Invalid session")
 	}
@@ -104,7 +104,7 @@ func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (*bac
 		isAdmin = true
 	}
 
-	user, err := auth.userService.FindById(ctx, userId)
+	user, err := ss.userService.FindById(ctx, userId)
 	if err != nil {
 		return nil, backend.NewError(backend.InternalError, "An error occurred")
 	}
@@ -115,7 +115,7 @@ func (auth *AuthService) VerifySession(ctx context.Context, cookie string) (*bac
 	}, nil
 }
 
-func (auth *AuthService) RevokeSession(ctx context.Context, uid string) error {
+func (auth *SessionService) RevokeSession(ctx context.Context, uid string) error {
 	err := auth.client.RevokeRefreshTokens(ctx, uid)
 	if err != nil {
 		return backend.NewError(backend.InternalError, "Failed to sign out everywhere")
@@ -124,8 +124,8 @@ func (auth *AuthService) RevokeSession(ctx context.Context, uid string) error {
 }
 
 // Creates a Firebase Auth implementation of AuthService
-func NewAuthService(ctx context.Context, config AuthServiceConfig) (*AuthService, error) {
-	firebaseApp, err := firebase.NewApp(ctx, nil)
+func NewAuthService(ctx context.Context, config SessionServiceConfig) (*SessionService, error) {
+	firebaseApp, err := firebase.NewApp(ctx, &firebase.Config{})
 	if err != nil {
 		return nil, backend.NewError(backend.InternalError, "Could not create Firebase App")
 	}
@@ -135,7 +135,7 @@ func NewAuthService(ctx context.Context, config AuthServiceConfig) (*AuthService
 		return nil, backend.NewError(backend.InternalError, "Could not create Firebase Auth Client")
 	}
 
-	return &AuthService{
+	return &SessionService{
 		client:      authClient,
 		userService: config.UserService,
 	}, nil

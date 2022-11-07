@@ -30,17 +30,17 @@ func main() {
 		}
 	}
 
-	auth, err := firebaseauth.NewAuthService(ctx, firebaseauth.AuthServiceConfig{
+	sessions, err := firebaseauth.NewSessionService(ctx, firebaseauth.SessionServiceConfig{
 		UserService: db.UserService,
 	})
 	if err != nil {
-		log.Fatalf("Could not create auth service: %v", err.Error())
+		log.Fatalf("Could not create session service: %v", err.Error())
 	}
 
 	app, err := http.NewApplication(ctx, http.Config{
-		Port:        getPort(),
-		Database:    db,
-		AuthService: auth,
+		Port:           getPort(),
+		Database:       db,
+		SessionService: sessions,
 	})
 	if err != nil {
 		log.Fatalf("Could not create HTTP Application: %v", err.Error())

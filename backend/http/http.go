@@ -10,17 +10,17 @@ import (
 )
 
 type Config struct {
-	Port        uint16
-	Host        string
-	Database    *postgres.Database
-	AuthService backend.AuthService
+	Port           uint16
+	Host           string
+	Database       *postgres.Database
+	SessionService backend.SessionService
 }
 
 type Application struct {
-	router      *http.ServeMux
-	server      *http.Server
-	database    *postgres.Database
-	authService backend.AuthService
+	router         *http.ServeMux
+	server         *http.Server
+	database       *postgres.Database
+	sessionService backend.SessionService
 }
 
 func (a *Application) Serve() error {
@@ -46,7 +46,7 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		Accept:     "application/json, application/grpc-web",
 	})
 
-	withAuth := NewAuthMiddleware(handler, config.AuthService)
+	withAuth := NewAuthMiddleware(handler, config.SessionService)
 
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),
@@ -54,10 +54,10 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 	}
 
 	app := &Application{
-		database:    config.Database,
-		authService: config.AuthService,
-		server:      &srv,
-		router:      mux,
+		database:       config.Database,
+		sessionService: config.SessionService,
+		server:         &srv,
+		router:         mux,
 	}
 	app.connectControllers(ctx)
 

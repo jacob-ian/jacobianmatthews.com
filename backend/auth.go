@@ -15,7 +15,7 @@ type SessionUser struct {
 	Admin bool `json:"admin"`
 }
 
-type AuthService interface {
+type SessionService interface {
 	CreateSession(ctx context.Context, idToken string) (Session, error)
 	VerifySession(ctx context.Context, sessionCookie string) (*SessionUser, error)
 	RevokeSession(ctx context.Context, uid string) error
