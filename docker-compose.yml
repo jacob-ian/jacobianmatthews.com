@@ -50,22 +50,12 @@ services:
       - 5432:5432
 
   emulators:
-    build:
-      context: .
-      dockerfile: emulators/Dockerfile
+    image: spine3/firebase-emulator
     env_file: emulators/.env
     volumes:
       - ./emulators/data:/firebase/baseline-data
-      - ./functions:/firebase/functions
-      - ./extensions/:/firebase/extensions
       - ./.firebaserc:/firebase/.firebaserc
       - ./firebase.json:/firebase/firebase.json
-      - ./firestore.indexes.json:/firebase/firebase.indexes.json
-      - ./firestore.rules:/firebase/firestore.rules
-      - ./storage.rules:/firebase/storage.rules
     ports:
       - 9099:9099
-      - 5001:5001
-      - 8080:8080
-      - 9199:9199
       - 4000:4000
