@@ -8,7 +8,7 @@ import (
 
 type AuthMiddleware struct {
 	handler http.Handler
-	service backend.AuthService
+	service backend.SessionService
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -29,9 +29,9 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Creates the authentication middleware
-func NewAuthMiddleware(h http.Handler, a backend.AuthService) *AuthMiddleware {
+func NewAuthMiddleware(h http.Handler, s backend.SessionService) *AuthMiddleware {
 	return &AuthMiddleware{
 		handler: h,
-		service: a,
+		service: s,
 	}
 }

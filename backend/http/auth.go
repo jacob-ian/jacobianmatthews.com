@@ -24,13 +24,13 @@ type logOutResponse struct {
 
 // Connects the authentication controllers
 func (a *Application) connectAuthControllers(ctx context.Context, route string) {
-	a.router.Handle(route+"/login", handleLogin(a.authService))
-	a.router.Handle(route+"/logout", handleLogout(a.authService))
-	a.router.Handle(route+"/me", handleMe(a.authService))
+	a.router.Handle(route+"/login", handleLogin(a.sessionService))
+	a.router.Handle(route+"/logout", handleLogout(a.sessionService))
+	a.router.Handle(route+"/me", handleMe(a.sessionService))
 }
 
 // Attempt to sign the user into the website
-func handleLogin(auth backend.AuthService) http.HandlerFunc {
+func handleLogin(sessionService backend.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -49,7 +49,7 @@ func handleLogin(auth backend.AuthService) http.HandlerFunc {
 			return
 		}
 
-		session, err := auth.CreateSession(r.Context(), payload.IdToken)
+		session, err := sessionService.CreateSession(r.Context(), payload.IdToken)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
@@ -72,7 +72,7 @@ func handleLogin(auth backend.AuthService) http.HandlerFunc {
 }
 
 // Revokes the user's session (signs the user out)
-func handleLogout(auth backend.AuthService) http.HandlerFunc {
+func handleLogout(sessionService backend.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -85,7 +85,7 @@ func handleLogout(auth backend.AuthService) http.HandlerFunc {
 			return
 		}
 
-		err := auth.RevokeSession(r.Context(), user.User.Id)
+		err := sessionService.RevokeSession(r.Context(), user.User.Id)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
@@ -104,7 +104,7 @@ func handleLogout(auth backend.AuthService) http.HandlerFunc {
 }
 
 // Return the details for the currently signed in user
-func handleMe(auth backend.AuthService) http.HandlerFunc {
+func handleMe(session backend.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)

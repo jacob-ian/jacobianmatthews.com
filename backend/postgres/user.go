@@ -10,17 +10,17 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type UserService struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
-func (us *UserService) FindById(ctx context.Context, id string) (backend.User, error) {
+func (ur *UserRepository) FindById(ctx context.Context, id string) (backend.User, error) {
 	var user backend.User
 	statement := `
         SELECT * FROM users
         WHERE id = $1 AND deleted_at IS NULL
     `
-	err := us.db.QueryRowContext(ctx, statement, id).Scan(&user)
+	err := ur.db.QueryRowContext(ctx, statement, id).Scan(&user)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return backend.User{}, backend.NewError(backend.NotFoundError, "User not found")
@@ -31,7 +31,7 @@ func (us *UserService) FindById(ctx context.Context, id string) (backend.User, e
 	return user, nil
 }
 
-func (us *UserService) FindAll(ctx context.Context, filter backend.UserFilter) ([]backend.User, error) {
+func (us *UserRepository) FindAll(ctx context.Context, filter backend.UserFilter) ([]backend.User, error) {
 	statement := `
         SELECT * FROM users 
         ORDER BY name ASC
@@ -82,7 +82,7 @@ func (us *UserService) FindAll(ctx context.Context, filter backend.UserFilter) (
 	return users, nil
 }
 
-func (us *UserService) Create(ctx context.Context, user backend.NewUser) (backend.User, error) {
+func (us *UserRepository) Create(ctx context.Context, user backend.NewUser) (backend.User, error) {
 	var newUser backend.User
 	statement := `
         INSERT INTO users (id, name, email, email_verified, image_url)
@@ -98,7 +98,7 @@ func (us *UserService) Create(ctx context.Context, user backend.NewUser) (backen
 	return newUser, nil
 }
 
-func (us *UserService) Update(ctx context.Context, user backend.User) (backend.User, error) {
+func (us *UserRepository) Update(ctx context.Context, user backend.User) (backend.User, error) {
 	var updated backend.User
 	statement := `
         UPDATE users
@@ -117,7 +117,7 @@ func (us *UserService) Update(ctx context.Context, user backend.User) (backend.U
 	return updated, nil
 }
 
-func (us *UserService) Delete(ctx context.Context, id string) error {
+func (us *UserRepository) Delete(ctx context.Context, id string) error {
 	statement := `
         UPDATE users
         SET deleted_at = NOW(), updated_at = NOW()
@@ -134,11 +134,9 @@ func (us *UserService) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-var _ backend.UserService = (*UserService)(nil)
-
-// Create a UserService
-func NewUserService(ctx context.Context, db *sql.DB) *UserService {
-	return &UserService{
+// Create a postgres implemented UserRepository
+func NewUserRepository(ctx context.Context, db *sql.DB) *UserRepository {
+	return &UserRepository{
 		db: db,
 	}
 }

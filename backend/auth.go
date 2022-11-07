@@ -20,3 +20,8 @@ type SessionService interface {
 	VerifySession(ctx context.Context, sessionCookie string) (*SessionUser, error)
 	RevokeSession(ctx context.Context, uid string) error
 }
+
+type AuthService interface {
+	GetUserRole(ctx context.Context, userId string) (Role, error)
+	GrantUserRole(ctx context.Context, userId string, roleName string) (UserRole, error)
+}

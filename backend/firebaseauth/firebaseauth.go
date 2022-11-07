@@ -10,12 +10,12 @@ import (
 )
 
 type SessionServiceConfig struct {
-	UserService backend.UserService
+	UserRepository backend.UserRepository
 }
 
 type SessionService struct {
-	client      *auth.Client
-	userService backend.UserService
+	client *auth.Client
+	users  backend.UserRepository
 }
 
 // Creates a session from a Firebase Auth ID Token
@@ -55,7 +55,7 @@ func authenticatedWithin(token *auth.Token, duration time.Duration) bool {
 // Finds the associated user or creates one
 func (ss *SessionService) findOrCreateUser(ctx context.Context, token *auth.Token) (backend.User, error) {
 	createUser := false
-	user, err := ss.userService.FindById(ctx, token.UID)
+	user, err := ss.users.FindById(ctx, token.UID)
 	if err != nil {
 		if e, ok := err.(*backend.Error); ok {
 			if e.IsError(backend.NotFoundError) {
@@ -76,7 +76,7 @@ func (ss *SessionService) findOrCreateUser(ctx context.Context, token *auth.Toke
 		return backend.User{}, backend.NewError(backend.InternalError, "Invalid User ID")
 	}
 
-	user, err = ss.userService.Create(ctx, backend.NewUser{
+	user, err = ss.users.Create(ctx, backend.NewUser{
 		Id:            fUser.UID,
 		Name:          fUser.DisplayName,
 		Email:         fUser.Email,
@@ -104,7 +104,7 @@ func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*ba
 		isAdmin = true
 	}
 
-	user, err := ss.userService.FindById(ctx, userId)
+	user, err := ss.users.FindById(ctx, userId)
 	if err != nil {
 		return nil, backend.NewError(backend.InternalError, "An error occurred")
 	}
@@ -124,7 +124,7 @@ func (auth *SessionService) RevokeSession(ctx context.Context, uid string) error
 }
 
 // Creates a Firebase Auth implementation of AuthService
-func NewAuthService(ctx context.Context, config SessionServiceConfig) (*SessionService, error) {
+func NewSessionService(ctx context.Context, config SessionServiceConfig) (*SessionService, error) {
 	firebaseApp, err := firebase.NewApp(ctx, &firebase.Config{})
 	if err != nil {
 		return nil, backend.NewError(backend.InternalError, "Could not create Firebase App")
@@ -136,7 +136,7 @@ func NewAuthService(ctx context.Context, config SessionServiceConfig) (*SessionS
 	}
 
 	return &SessionService{
-		client:      authClient,
-		userService: config.UserService,
+		client: authClient,
+		users:  config.UserRepository,
 	}, nil
 }

@@ -31,7 +31,7 @@ func main() {
 	}
 
 	sessions, err := firebaseauth.NewSessionService(ctx, firebaseauth.SessionServiceConfig{
-		UserService: db.UserService,
+		UserRepository: db.UserRepository,
 	})
 	if err != nil {
 		log.Fatalf("Could not create session service: %v", err.Error())

@@ -16,7 +16,7 @@ type User struct {
 	DeletedAt     time.Time `json:"deletedAt" field:"deleted_at"`
 }
 
-type UserService interface {
+type UserRepository interface {
 	FindAll(ctx context.Context, filter UserFilter) ([]User, error)
 	FindById(ctx context.Context, id string) (User, error)
 	Create(ctx context.Context, user NewUser) (User, error)
