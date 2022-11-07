@@ -23,6 +23,7 @@ func main() {
 
 	env := os.Getenv("ENVIRONMENT")
 	if env == "production" {
+		log.Println("Running database migrations...")
 		err := db.RunMigrations()
 		if err != nil {
 			log.Fatalf("Could not run database migrations: %v", err.Error())

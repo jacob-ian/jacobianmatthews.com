@@ -77,6 +77,7 @@ func (auth *AuthService) findOrCreateUser(ctx context.Context, token *auth.Token
 	}
 
 	user, err = auth.userService.Create(ctx, backend.NewUser{
+		Id:            fUser.UID,
 		Name:          fUser.DisplayName,
 		Email:         fUser.Email,
 		EmailVerified: fUser.EmailVerified,
