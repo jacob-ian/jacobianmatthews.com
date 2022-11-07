@@ -2,6 +2,9 @@ CREATE TABLE IF NOT EXISTS user_role(
     id UUID PRIMARY KEY UNIQUE,
     user_id VARCHAR,
     role_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
             REFERENCES users(id)

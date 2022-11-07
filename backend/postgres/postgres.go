@@ -21,6 +21,7 @@ var embedFs embed.FS
 type Database struct {
 	Db             *sql.DB
 	UserRepository *UserRepository
+	RoleRepository *RoleRepository
 }
 
 // Close the Database connection
@@ -67,5 +68,6 @@ func NewDatabaseClient(ctx context.Context, connStr string) (*Database, error) {
 	return &Database{
 		Db:             db,
 		UserRepository: NewUserRepository(ctx, db),
+		RoleRepository: NewRoleRepository(ctx, db),
 	}, nil
 }
