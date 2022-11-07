@@ -64,7 +64,7 @@ func handleLogin(auth backend.AuthService) http.HandlerFunc {
 			Secure:   true,
 		})
 
-		NewResponseWriter(w, r).Write(http.StatusOK, logInResponse{
+		NewResponseWriter(w, r).Write(http.StatusCreated, logInResponse{
 			Message:   "Signed in",
 			ExpiresIn: int(session.ExpiresIn.Seconds()),
 		})
