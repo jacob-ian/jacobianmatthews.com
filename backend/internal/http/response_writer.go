@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type Afterware interface {
@@ -38,7 +38,7 @@ func (w *ResponseWriter) Write(statusCode int, res any) {
 
 // Handles a thrown error and writes a JSON response to the client
 func (w *ResponseWriter) HandleError(e error) {
-	err, ok := e.(backend.Error)
+	err, ok := e.(core.Error)
 	if !ok {
 		w.WriteError(err.Error(), http.StatusInternalServerError)
 		return

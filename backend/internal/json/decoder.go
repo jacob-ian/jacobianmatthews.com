@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type JsonDecoder struct {
@@ -20,13 +20,13 @@ func (d *JsonDecoder) Decode(v any) error {
 	d.decoder.DisallowUnknownFields()
 	err := d.decoder.Decode(v)
 	if err != nil {
-		return backend.NewError(http.StatusBadRequest, "Invalid JSON")
+		return core.NewError(http.StatusBadRequest, "Invalid JSON")
 	}
 	fields := reflect.ValueOf(v).Elem()
 	for i := 0; i < fields.NumField(); i++ {
 		tag := fields.Type().Field(i).Tag.Get("required")
 		if strings.Contains(tag, "true") && fields.Field(i).IsZero() {
-			return backend.NewError(http.StatusBadRequest, "Missing required field")
+			return core.NewError(http.StatusBadRequest, "Missing required field")
 		}
 	}
 	return nil

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/json"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/json"
 )
 
 type logInPayload struct {
@@ -30,7 +30,7 @@ func (a *Application) connectAuthControllers(ctx context.Context, route string) 
 }
 
 // Attempt to sign the user into the website
-func handleLogin(sessionService backend.SessionService) http.HandlerFunc {
+func handleLogin(sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -72,14 +72,14 @@ func handleLogin(sessionService backend.SessionService) http.HandlerFunc {
 }
 
 // Revokes the user's session (signs the user out)
-func handleLogout(sessionService backend.SessionService) http.HandlerFunc {
+func handleLogout(sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		user, ok := UserFromContext(r.Context())
+		user, ok := core.UserFromContext(r.Context())
 		if !ok {
 			NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return
@@ -104,14 +104,14 @@ func handleLogout(sessionService backend.SessionService) http.HandlerFunc {
 }
 
 // Return the details for the currently signed in user
-func handleMe(session backend.SessionService) http.HandlerFunc {
+func handleMe(session core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		user, ok := UserFromContext(r.Context())
+		user, ok := core.UserFromContext(r.Context())
 		if !ok {
 			NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return

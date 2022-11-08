@@ -2,8 +2,8 @@ package http
 
 import (
 	"context"
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/postgres"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,14 +13,14 @@ type Config struct {
 	Port           uint16
 	Host           string
 	Database       *postgres.Database
-	SessionService backend.SessionService
+	SessionService core.SessionService
 }
 
 type Application struct {
 	router         *http.ServeMux
 	server         *http.Server
 	database       *postgres.Database
-	sessionService backend.SessionService
+	sessionService core.SessionService
 }
 
 func (a *Application) Serve() error {

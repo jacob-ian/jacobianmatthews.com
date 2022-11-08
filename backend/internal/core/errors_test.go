@@ -1,13 +1,13 @@
-package backend_test
+package core_test
 
 import (
 	"testing"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 func TestError(t *testing.T) {
-	error := backend.NewError(backend.InternalError, "This is a test")
+	error := core.NewError(core.InternalError, "This is a test")
 	got := error.Error()
 	want := "500: This is a test"
 	if got != want {

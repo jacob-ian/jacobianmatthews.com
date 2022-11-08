@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type CsrfAfterware struct {
@@ -15,7 +15,7 @@ func (m *CsrfAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error 
 	token := make([]byte, 16)
 	_, err := rand.Read(token)
 	if err != nil {
-		return backend.NewError(http.StatusInternalServerError, "CSRF Error")
+		return core.NewError(http.StatusInternalServerError, "CSRF Error")
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrfToken",

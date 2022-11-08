@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 )
 
 func TestWriteJson(t *testing.T) {
@@ -75,13 +75,13 @@ func TestWriteError(t *testing.T) {
 func TestHandleErrorCustomType(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
-	err := backend.NewError(backend.InternalError, "A test error")
+	err := core.NewError(core.InternalError, "A test error")
 
 	http.NewResponseWriter(rr, req).HandleError(err)
 
 	sc := rr.Result().StatusCode
-	if sc != backend.InternalError {
-		t.Errorf("Unexpected status: got %v want %v", sc, backend.InternalError)
+	if sc != core.InternalError {
+		t.Errorf("Unexpected status: got %v want %v", sc, core.InternalError)
 	}
 
 	ct := rr.Result().Header.Get("Content-Type")

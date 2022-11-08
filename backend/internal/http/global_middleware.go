@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type Header struct {
@@ -55,7 +55,7 @@ func (m *GlobalMiddleware) checkRequestHeaders(r *http.Request) error {
 		if r.Header.Get(required.Name) == required.Value {
 			break
 		}
-		return backend.NewError(backend.BadRequestError, "Invalid Request")
+		return core.NewError(core.BadRequestError, "Invalid Request")
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func checkContentType(r *http.Request, accepted string) error {
 	if matches == 1 {
 		return nil
 	}
-	return backend.NewError(http.StatusNotAcceptable, "Not Acceptable")
+	return core.NewError(http.StatusNotAcceptable, "Not Acceptable")
 }
 
 // Create middleware that defines required request headers and the global response headers

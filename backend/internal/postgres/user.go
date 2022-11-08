@@ -6,7 +6,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	_ "github.com/lib/pq"
 )
 
@@ -14,8 +14,8 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func (ur *UserRepository) FindById(ctx context.Context, id string) (backend.User, error) {
-	var user backend.User
+func (ur *UserRepository) FindById(ctx context.Context, id string) (core.User, error) {
+	var user core.User
 	statement := `
         SELECT * FROM users
         WHERE id = $1 AND deleted_at IS NULL
@@ -23,15 +23,15 @@ func (ur *UserRepository) FindById(ctx context.Context, id string) (backend.User
 	err := ur.db.QueryRowContext(ctx, statement, id).Scan(&user)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return backend.User{}, backend.NewError(backend.NotFoundError, "User not found")
+			return core.User{}, core.NewError(core.NotFoundError, "User not found")
 		}
 		log.Printf("ERROR: DB_USERS_FINDBYID - %v", err.Error())
-		return backend.User{}, backend.NewError(backend.InternalError, "An error occurred")
+		return core.User{}, core.NewError(core.InternalError, "An error occurred")
 	}
 	return user, nil
 }
 
-func (us *UserRepository) FindAll(ctx context.Context, filter backend.UserFilter) ([]backend.User, error) {
+func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) ([]core.User, error) {
 	statement := `
         SELECT * FROM users 
         ORDER BY name ASC
@@ -61,29 +61,29 @@ func (us *UserRepository) FindAll(ctx context.Context, filter backend.UserFilter
 	rows, err := us.db.QueryContext(ctx, statement, filter.Name, filter.Email)
 	if err != nil {
 		log.Printf("ERROR: DB_USERS_FINDALL - %v", err.Error())
-		return []backend.User{}, backend.NewError(backend.InternalError, "Could not get users")
+		return []core.User{}, core.NewError(core.InternalError, "Could not get users")
 	}
 	defer rows.Close()
 
-	var users []backend.User
+	var users []core.User
 	for rows.Next() {
-		var user backend.User
+		var user core.User
 		err := rows.Scan(&user)
 		if err != nil {
 			log.Printf("ERROR: DB_USERS_FINDALL - %v", err.Error())
-			return []backend.User{}, backend.NewError(backend.InternalError, "Could not get users")
+			return []core.User{}, core.NewError(core.InternalError, "Could not get users")
 		}
 		users = append(users, user)
 	}
 	if err = rows.Err(); err != nil {
 		log.Printf("ERROR: DB_USERS_FINDALL - %v", err.Error())
-		return []backend.User{}, backend.NewError(backend.InternalError, "Could not get users")
+		return []core.User{}, core.NewError(core.InternalError, "Could not get users")
 	}
 	return users, nil
 }
 
-func (us *UserRepository) Create(ctx context.Context, user backend.NewUser) (backend.User, error) {
-	var newUser backend.User
+func (us *UserRepository) Create(ctx context.Context, user core.NewUser) (core.User, error) {
+	var newUser core.User
 	statement := `
         INSERT INTO users (id, name, email, email_verified, image_url)
         VALUES($1, $2, $3, $4, $5)
@@ -92,14 +92,14 @@ func (us *UserRepository) Create(ctx context.Context, user backend.NewUser) (bac
 	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&newUser)
 	if err != nil {
 		log.Printf("ERROR: DB_USERS_CREATE - %v", err.Error())
-		return backend.User{}, backend.NewError(backend.InternalError, "Could not create user")
+		return core.User{}, core.NewError(core.InternalError, "Could not create user")
 	}
 
 	return newUser, nil
 }
 
-func (us *UserRepository) Update(ctx context.Context, user backend.User) (backend.User, error) {
-	var updated backend.User
+func (us *UserRepository) Update(ctx context.Context, user core.User) (core.User, error) {
+	var updated core.User
 	statement := `
         UPDATE users
         SET updated_at = NOW(), name = $2, email = $3, email_verified = $4, image_url = $5
@@ -109,10 +109,10 @@ func (us *UserRepository) Update(ctx context.Context, user backend.User) (backen
 	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&updated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return backend.User{}, backend.NewError(backend.NotFoundError, "User not found")
+			return core.User{}, core.NewError(core.NotFoundError, "User not found")
 		}
 		log.Printf("ERROR: DB_USERS_UPDATE - %v", err.Error())
-		return backend.User{}, backend.NewError(backend.InternalError, "Could not update user")
+		return core.User{}, core.NewError(core.InternalError, "Could not update user")
 	}
 	return updated, nil
 }
@@ -126,10 +126,10 @@ func (us *UserRepository) Delete(ctx context.Context, id string) error {
 	err := us.db.QueryRowContext(ctx, statement, id).Err()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return backend.NewError(backend.NotFoundError, "User not found")
+			return core.NewError(core.NotFoundError, "User not found")
 		}
 		log.Printf("ERROR: DB_USERS_DELETE - %v", err.Error())
-		return backend.NewError(backend.InternalError, "Could not delete user")
+		return core.NewError(core.InternalError, "Could not delete user")
 	}
 	return nil
 }

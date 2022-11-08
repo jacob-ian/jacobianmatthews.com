@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend/firebaseauth"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/postgres"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/firebaseauth"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 )
 
 func main() {

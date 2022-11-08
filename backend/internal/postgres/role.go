@@ -6,15 +6,15 @@ import (
 	"errors"
 	"log"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type RoleRepository struct {
 	db *sql.DB
 }
 
-func (rr *RoleRepository) FindByName(ctx context.Context, name string) (backend.Role, error) {
-	var role backend.Role
+func (rr *RoleRepository) FindByName(ctx context.Context, name string) (core.Role, error) {
+	var role core.Role
 	query := `
         SELECT * FROM roles
         WHERE name = $1 AND deleted_at IS NULL
@@ -22,41 +22,41 @@ func (rr *RoleRepository) FindByName(ctx context.Context, name string) (backend.
 	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return backend.Role{}, backend.NewError(backend.NotFoundError, "Role not found")
+			return core.Role{}, core.NewError(core.NotFoundError, "Role not found")
 		}
 		log.Printf("ERROR: DB_ROLE_FINDBYNAME - %v", err.Error())
-		return backend.Role{}, backend.NewError(backend.InternalError, "Could not get role")
+		return core.Role{}, core.NewError(core.InternalError, "Could not get role")
 	}
 	return role, nil
 }
 
-func (rr *RoleRepository) FindAll(ctx context.Context) ([]backend.Role, error) {
+func (rr *RoleRepository) FindAll(ctx context.Context) ([]core.Role, error) {
 	query := `SELECT * FROM roles WHERE deleted_at IS NULL`
 	rows, err := rr.db.QueryContext(ctx, query)
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())
-		return []backend.Role{}, backend.NewError(backend.InternalError, "Could not get roles")
+		return []core.Role{}, core.NewError(core.InternalError, "Could not get roles")
 	}
-	var roles []backend.Role
+	var roles []core.Role
 	for rows.Next() {
-		var role backend.Role
+		var role core.Role
 		err := rows.Scan(&role)
 		if err != nil {
 			log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())
-			return []backend.Role{}, backend.NewError(backend.InternalError, "Could not get roles")
+			return []core.Role{}, core.NewError(core.InternalError, "Could not get roles")
 		}
 		roles = append(roles, role)
 	}
 	err = rows.Err()
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())
-		return []backend.Role{}, backend.NewError(backend.InternalError, "Could not get roles")
+		return []core.Role{}, core.NewError(core.InternalError, "Could not get roles")
 	}
 	return roles, nil
 }
 
-func (rr *RoleRepository) Create(ctx context.Context, name string) (backend.Role, error) {
-	var role backend.Role
+func (rr *RoleRepository) Create(ctx context.Context, name string) (core.Role, error) {
+	var role core.Role
 	query := `
         INSERT INTO roles (id, name)
         VALUES (gen_random_uuid(), $1)
@@ -65,7 +65,7 @@ func (rr *RoleRepository) Create(ctx context.Context, name string) (backend.Role
 	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_CREATE - %v", err.Error())
-		return backend.Role{}, backend.NewError(backend.InternalError, "Could not create role")
+		return core.Role{}, core.NewError(core.InternalError, "Could not create role")
 	}
 	return role, nil
 }
@@ -79,10 +79,10 @@ func (rr *RoleRepository) Delete(ctx context.Context, name string) error {
 	err := rr.db.QueryRowContext(ctx, query, name).Err()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return backend.NewError(backend.NotFoundError, "Role not found")
+			return core.NewError(core.NotFoundError, "Role not found")
 		}
 		log.Printf("ERROR: DB_ROLE_DELETE - %v", err.Error())
-		return backend.NewError(backend.InternalError, "Could not delete role")
+		return core.NewError(core.InternalError, "Could not delete role")
 	}
 	return nil
 }

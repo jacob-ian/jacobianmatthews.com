@@ -1,18 +1,17 @@
-package http_test
+package core_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 func TestAttachUserContext(t *testing.T) {
-	user := &backend.SessionUser{
+	user := &core.SessionUser{
 		Admin: true,
-		User: backend.User{
+		User: core.User{
 			Id:        "id",
 			Name:      "lolname",
 			Email:     "lol@email",
@@ -24,18 +23,18 @@ func TestAttachUserContext(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	got := http.WithUserContext(ctx, user)
+	got := core.WithUserContext(ctx, user)
 
-	ctxUser := got.Value(http.UserContextKey)
+	ctxUser := got.Value(core.UserContextKey)
 	if ctxUser != user {
 		t.Errorf("Unexpected user in context: got %v want %v", ctxUser, user)
 	}
 }
 
 func TestUserFromContextExists(t *testing.T) {
-	user := &backend.SessionUser{
+	user := &core.SessionUser{
 		Admin: true,
-		User: backend.User{
+		User: core.User{
 			Id:        "id",
 			Name:      "lolname",
 			Email:     "lol@email",
@@ -46,8 +45,8 @@ func TestUserFromContextExists(t *testing.T) {
 		},
 	}
 
-	ctx := context.WithValue(context.Background(), http.UserContextKey, user)
-	got, gotOk := http.UserFromContext(ctx)
+	ctx := context.WithValue(context.Background(), core.UserContextKey, user)
+	got, gotOk := core.UserFromContext(ctx)
 
 	if !gotOk {
 		t.Errorf("Unexpected user in context: got %v want %v", got, user)
@@ -56,7 +55,7 @@ func TestUserFromContextExists(t *testing.T) {
 
 func TestUserFromContextNotExist(t *testing.T) {
 	ctx := context.Background()
-	got, gotOk := http.UserFromContext(ctx)
+	got, gotOk := core.UserFromContext(ctx)
 	if gotOk {
 		t.Errorf("Unexpected user in context: got %v want %v", got, nil)
 	}

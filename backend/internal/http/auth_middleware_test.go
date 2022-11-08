@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
 )
 
@@ -45,7 +45,7 @@ func TestNotSignedInPassThrough(t *testing.T) {
 		SessionCookie: "",
 	})
 
-	userCtx, ok := req.Context().Value(http.UserContextKey).(*backend.SessionUser)
+	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
 	if ok == true {
 		t.Errorf("Unexpected user in context: got %v want %v", userCtx, nil)
 	}
@@ -62,16 +62,16 @@ func TestSessionVerifyErrorBlock(t *testing.T) {
 		SessionCookie: "coookie",
 		VerifySessionOutput: mock.MockVerifySessionOutput{
 			Value: nil,
-			Error: backend.NewError(backend.BadRequestError, "Invalid session"),
+			Error: core.NewError(core.BadRequestError, "Invalid session"),
 		},
 	})
 
 	status := rr.Result().StatusCode
-	if status != backend.BadRequestError {
-		t.Errorf("Unexpected status code: got %v want %v", status, backend.BadRequestError)
+	if status != core.BadRequestError {
+		t.Errorf("Unexpected status code: got %v want %v", status, core.BadRequestError)
 	}
 
-	userCtx, ok := req.Context().Value(http.UserContextKey).(*backend.SessionUser)
+	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
 	if ok == true {
 		t.Errorf("Unexpected user in context: got %v want %v", userCtx, nil)
 	}
@@ -79,9 +79,9 @@ func TestSessionVerifyErrorBlock(t *testing.T) {
 
 // Should attach user to request context and pass through to handler
 func TestValidSessionUserContext(t *testing.T) {
-	user := &backend.SessionUser{
+	user := &core.SessionUser{
 		Admin: true,
-		User: backend.User{
+		User: core.User{
 			Id:        "id",
 			Name:      "lolname",
 			Email:     "lol@email",
@@ -100,7 +100,7 @@ func TestValidSessionUserContext(t *testing.T) {
 		},
 	})
 
-	userCtx, ok := req.Context().Value(http.UserContextKey).(*backend.SessionUser)
+	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
 	if ok == false || userCtx != user {
 		t.Errorf("Unexpected user in context: got %v want %v", userCtx, user)
 	}

@@ -3,12 +3,12 @@ package http
 import (
 	"net/http"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 type AuthMiddleware struct {
 	handler http.Handler
-	service backend.SessionService
+	service core.SessionService
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -24,12 +24,12 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := WithUserContext(r.Context(), user)
+	ctx := core.WithUserContext(r.Context(), user)
 	m.handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
 // Creates the authentication middleware
-func NewAuthMiddleware(h http.Handler, s backend.SessionService) *AuthMiddleware {
+func NewAuthMiddleware(h http.Handler, s core.SessionService) *AuthMiddleware {
 	return &AuthMiddleware{
 		handler: h,
 		service: s,
