@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS user_role(
     id UUID PRIMARY KEY UNIQUE,
-    user_id VARCHAR,
+    user_id VARCHAR UNIQUE,
     role_id UUID,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
