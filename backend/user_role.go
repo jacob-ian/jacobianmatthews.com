@@ -20,7 +20,6 @@ type UserRoleRepository interface {
 	FindRoleByUserId(ctx context.Context, userId string) (Role, error)
 	FindById(ctx context.Context, id uuid.UUID) (UserRole, error)
 	Create(ctx context.Context, userId string, roleId uuid.UUID) (UserRole, error)
-	Update(ctx context.Context, update UserRole) (UserRole, error)
+	UpdateByUserId(ctx context.Context, userId string, roleId uuid.UUID) (UserRole, error)
 	DeleteByUserId(ctx context.Context, userId string) error
-	Delete(ctx context.Context, id uuid.UUID) error
 }

@@ -17,7 +17,7 @@ func (rr *RoleRepository) FindByName(ctx context.Context, name string) (backend.
 	var role backend.Role
 	query := `
         SELECT * FROM roles
-        WHERE name = $1 AND deleted_at IS NOT NULL
+        WHERE name = $1 AND deleted_at IS NULL
     `
 	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
 	if err != nil {
@@ -31,7 +31,7 @@ func (rr *RoleRepository) FindByName(ctx context.Context, name string) (backend.
 }
 
 func (rr *RoleRepository) FindAll(ctx context.Context) ([]backend.Role, error) {
-	query := `SELECT * FROM roles WHERE deleted_at is NOT NULL`
+	query := `SELECT * FROM roles WHERE deleted_at IS NULL`
 	rows, err := rr.db.QueryContext(ctx, query)
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())

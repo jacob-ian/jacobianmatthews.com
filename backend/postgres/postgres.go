@@ -19,9 +19,10 @@ var embedFs embed.FS
 
 // A PostgreSQL database implementation
 type Database struct {
-	Db             *sql.DB
-	UserRepository *UserRepository
-	RoleRepository *RoleRepository
+	Db                 *sql.DB
+	UserRepository     *UserRepository
+	RoleRepository     *RoleRepository
+	UserRoleRepository *UserRoleRepository
 }
 
 // Close the Database connection
@@ -66,8 +67,9 @@ func NewDatabaseClient(ctx context.Context, connStr string) (*Database, error) {
 	log.Println("Connected to PostgreSQL")
 
 	return &Database{
-		Db:             db,
-		UserRepository: NewUserRepository(ctx, db),
-		RoleRepository: NewRoleRepository(ctx, db),
+		Db:                 db,
+		UserRepository:     NewUserRepository(ctx, db),
+		RoleRepository:     NewRoleRepository(ctx, db),
+		UserRoleRepository: NewUserRoleRepository(ctx, db),
 	}, nil
 }
