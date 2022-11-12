@@ -85,7 +85,7 @@ func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) (
 func (us *UserRepository) Create(ctx context.Context, user core.NewUser) (core.User, error) {
 	var newUser core.User
 	statement := `
-        INSERT INTO users (id, name, email, email_verified, image_url)
+        INSERT INTO users(id, name, email, email_verified, image_url)
         VALUES($1, $2, $3, $4, $5)
         RETURNING *;
     `
