@@ -7,5 +7,5 @@ migration_down:
 migration_force:
 	migrate -database $(DB_CONNECTION_STRING) -path internal/postgres/migrations force $(VERSION)
 seed_dev:
-	./scripts/seed_db.sh $(DB_CONNECTION_STRING) /src/jacobianmatthews.com/backend/internal/postgres/seed/dev
+	./scripts/seed_db.sh $(DB_CONNECTION_STRING) internal/postgres/seed/dev
 
