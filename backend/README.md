@@ -4,6 +4,13 @@ The backend for my website. It uses HTTP for Auth and GRPC for the CMS.
 
 ## Development
 
+### Database State
+
+To create a valid development database, SSH into the `backend` container and run:
+
+- `make migration_up`
+- `make seed_dev`
+
 ### Database Migrations
 
 To run/create database migrations in development, you must shell into the `backend` development docker container.
