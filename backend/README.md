@@ -6,10 +6,9 @@ The backend for my website. It uses HTTP for Auth and GRPC for the CMS.
 
 ### Database State
 
-To create a valid development database, SSH into the `backend` container and run:
+To setup the development database, SSH into the `backend` container and run:
 
-- `make migration_up`
-- `make seed_dev`
+- `make setup_dev`
 
 ### Database Migrations
 

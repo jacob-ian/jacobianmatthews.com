@@ -8,4 +8,9 @@ migration_force:
 	migrate -database $(DB_CONNECTION_STRING) -path internal/postgres/migrations force $(VERSION)
 seed_dev:
 	./scripts/seed_db.sh $(DB_CONNECTION_STRING) internal/postgres/seed/dev
-
+setup_dev:
+	@echo "Running database migrations..."
+	@make migration_up
+	@echo "Seeding development database..."
+	@make seed_dev
+	@echo "Done. Good luck!"
