@@ -17,10 +17,12 @@ type UserRoleRepository struct {
 func (urr *UserRoleRepository) FindRoleByUserId(ctx context.Context, userId string) (core.Role, error) {
 	var role core.Role
 	query := `
-        SELECT role.* FROM role 
+        SELECT roles.* 
+        FROM roles
         INNER JOIN user_role
-        ON role.id = user_role.role_id
-        WHERE user_role.user_id = $1 AND user_role.deleted_at IS NULL
+        ON roles.id = user_role.role_id
+        WHERE user_role.user_id = $1 
+            AND user_role.deleted_at IS NULL;
     `
 	err := urr.db.QueryRowContext(ctx, query, userId).Scan(&role)
 	if err != nil {
@@ -36,8 +38,10 @@ func (urr *UserRoleRepository) FindRoleByUserId(ctx context.Context, userId stri
 func (urr *UserRoleRepository) FindById(ctx context.Context, id uuid.UUID) (core.UserRole, error) {
 	var userRole core.UserRole
 	query := `
-        SELECT * FROM user_role
-        WHERE id = $1 AND deleted_at IS NULL
+        SELECT * 
+        FROM user_role
+        WHERE id = $1 
+            AND deleted_at IS NULL;
     `
 	err := urr.db.QueryRowContext(ctx, query, id).Scan(&userRole)
 	if err != nil {
@@ -53,9 +57,9 @@ func (urr *UserRoleRepository) FindById(ctx context.Context, id uuid.UUID) (core
 func (urr *UserRoleRepository) Create(ctx context.Context, userId string, roleId uuid.UUID) (core.UserRole, error) {
 	var userRole core.UserRole
 	query := `
-        INSERT INTO user_role (id, user_id, role_id)
-        VALUES (gen_random_uuid(), $1, $2)
-        RETURNING *
+        INSERT INTO user_role (id, user_id, role_id) VALUES 
+            (gen_random_uuid(), $1, $2)
+        RETURNING *;
     `
 	err := urr.db.QueryRowContext(ctx, query, userId, roleId).Scan(&userRole)
 	if err != nil {
@@ -69,8 +73,13 @@ func (urr *UserRoleRepository) UpdateByUserId(ctx context.Context, userId string
 	var updated core.UserRole
 	query := `
         UPDATE user_role
-        SET role_id = $2, updated_at = NOW()
-        WHERE user_id = $1 AND deleted_at IS NULL
+        SET 
+            role_id = $2, 
+            updated_at = NOW()
+        WHERE   
+            user_id = $1 
+            AND deleted_at IS NULL
+        RETURNING *;
     `
 	err := urr.db.QueryRowContext(ctx, query, userId, roleId).Scan(&updated)
 	if err != nil {
@@ -86,8 +95,12 @@ func (urr *UserRoleRepository) UpdateByUserId(ctx context.Context, userId string
 func (urr *UserRoleRepository) DeleteByUserId(ctx context.Context, userId string) error {
 	query := `
         UPDATE user_role
-        SET deleted_at = NOW(), updated_at = NOW()
-        WHERE user_id = $1 AND deleted_at IS NULL
+        SET 
+            deleted_at = NOW(), 
+            updated_at = NOW()
+        WHERE   
+            user_id = $1 
+            AND deleted_at IS NULL
     `
 	err := urr.db.QueryRowContext(ctx, query, userId).Err()
 	if err != nil {

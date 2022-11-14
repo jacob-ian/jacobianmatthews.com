@@ -17,8 +17,11 @@ type UserRepository struct {
 func (ur *UserRepository) FindById(ctx context.Context, id string) (core.User, error) {
 	var user core.User
 	statement := `
-        SELECT * FROM users
-        WHERE id = $1 AND deleted_at IS NULL
+        SELECT * 
+        FROM users
+        WHERE 
+            id = $1 
+            AND deleted_at IS NULL;
     `
 	err := ur.db.QueryRowContext(ctx, statement, id).Scan(&user)
 	if err != nil {
@@ -33,8 +36,10 @@ func (ur *UserRepository) FindById(ctx context.Context, id string) (core.User, e
 
 func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) ([]core.User, error) {
 	statement := `
-        SELECT * FROM users 
-        ORDER BY name ASC
+        SELECT * 
+        FROM users 
+        WHERE deleted_at IS NULL
+        ORDER BY name ASC;
     `
 	conditions := make([]string, 2)
 	if filter.Name != "" {
@@ -85,8 +90,8 @@ func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) (
 func (us *UserRepository) Create(ctx context.Context, user core.NewUser) (core.User, error) {
 	var newUser core.User
 	statement := `
-        INSERT INTO users(id, name, email, email_verified, image_url)
-        VALUES($1, $2, $3, $4, $5)
+        INSERT INTO users(id, name, email, email_verified, image_url) VALUES
+            ($1, $2, $3, $4, $5)
         RETURNING *;
     `
 	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&newUser)
@@ -102,8 +107,15 @@ func (us *UserRepository) Update(ctx context.Context, user core.User) (core.User
 	var updated core.User
 	statement := `
         UPDATE users
-        SET updated_at = NOW(), name = $2, email = $3, email_verified = $4, image_url = $5
-        WHERE id = $1 AND deleted_at IS NULL
+        SET 
+            updated_at = NOW(), 
+            name = $2, 
+            email = $3, 
+            email_verified = $4, 
+            image_url = $5
+        WHERE 
+            id = $1 
+            AND deleted_at IS NULL
         RETURNING *;
     `
 	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&updated)
@@ -120,8 +132,12 @@ func (us *UserRepository) Update(ctx context.Context, user core.User) (core.User
 func (us *UserRepository) Delete(ctx context.Context, id string) error {
 	statement := `
         UPDATE users
-        SET deleted_at = NOW(), updated_at = NOW()
-        WHERE id = $1 AND deleted_at IS NULL
+        SET 
+            deleted_at = NOW(), 
+            updated_at = NOW()
+        WHERE 
+            id = $1 
+            AND deleted_at IS NULL;
     `
 	err := us.db.QueryRowContext(ctx, statement, id).Err()
 	if err != nil {

@@ -16,8 +16,11 @@ type RoleRepository struct {
 func (rr *RoleRepository) FindByName(ctx context.Context, name string) (core.Role, error) {
 	var role core.Role
 	query := `
-        SELECT * FROM roles
-        WHERE name = $1 AND deleted_at IS NULL
+        SELECT * 
+        FROM roles
+        WHERE 
+            name = $1 
+            AND deleted_at IS NULL;
     `
 	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
 	if err != nil {
@@ -31,7 +34,11 @@ func (rr *RoleRepository) FindByName(ctx context.Context, name string) (core.Rol
 }
 
 func (rr *RoleRepository) FindAll(ctx context.Context) ([]core.Role, error) {
-	query := `SELECT * FROM roles WHERE deleted_at IS NULL`
+	query := `
+        SELECT * 
+        FROM roles 
+        WHERE deleted_at IS NULL;
+    `
 	rows, err := rr.db.QueryContext(ctx, query)
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())
@@ -58,8 +65,8 @@ func (rr *RoleRepository) FindAll(ctx context.Context) ([]core.Role, error) {
 func (rr *RoleRepository) Create(ctx context.Context, name string) (core.Role, error) {
 	var role core.Role
 	query := `
-        INSERT INTO roles (id, name)
-        VALUES (gen_random_uuid(), $1)
+        INSERT INTO roles (id, name) VALUES 
+            (gen_random_uuid(), $1)
         RETURNING *;
     `
 	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
@@ -73,8 +80,10 @@ func (rr *RoleRepository) Create(ctx context.Context, name string) (core.Role, e
 func (rr *RoleRepository) Delete(ctx context.Context, name string) error {
 	query := `
         UPDATE roles
-        SET deleted_at = NOW(), updated_at = NOW()
-        WHERE name = $1 AND deleted_at IS NULL
+        SET deleted_at = NOW()
+        WHERE 
+            name = $1 
+            AND deleted_at IS NULL;
     `
 	err := rr.db.QueryRowContext(ctx, query, name).Err()
 	if err != nil {
