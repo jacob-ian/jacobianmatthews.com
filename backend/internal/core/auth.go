@@ -11,8 +11,8 @@ type Session struct {
 }
 
 type SessionUser struct {
-	User  User `json:"user"`
-	Admin bool `json:"admin"`
+	User User `json:"user"`
+	Role Role `json:"role"`
 }
 
 type SessionService interface {
@@ -21,7 +21,39 @@ type SessionService interface {
 	RevokeSession(ctx context.Context, uid string) error
 }
 
-type AuthService interface {
-	GetUserRole(ctx context.Context, userId string) (Role, error)
-	GrantUserRole(ctx context.Context, userId string, roleName string) (UserRole, error)
+type AuthService struct {
+	users     UserRepository
+	roles     RoleRepository
+	userRoles UserRoleRepository
+}
+
+type AuthServiceConfig struct {
+	UserRepository     UserRepository
+	RoleRepository     RoleRepository
+	UserRoleRepository UserRoleRepository
+}
+
+func (auth *AuthService) GetUserRole(ctx context.Context, userId string) (Role, error) {
+	return auth.userRoles.FindRoleByUserId(ctx, userId)
+}
+
+func (auth *AuthService) GiveUserRoleByName(ctx context.Context, userId string, roleName string) (Role, error) {
+	role, err := auth.roles.FindByName(ctx, roleName)
+	if err != nil {
+		return Role{}, err
+	}
+
+	_, err = auth.userRoles.Create(ctx, userId, role.Id)
+	if err != nil {
+		return Role{}, err
+	}
+	return role, nil
+}
+
+func NewAuthService(config AuthServiceConfig) *AuthService {
+	return &AuthService{
+		users:     config.UserRepository,
+		roles:     config.RoleRepository,
+		userRoles: config.UserRoleRepository,
+	}
 }

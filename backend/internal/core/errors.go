@@ -38,3 +38,12 @@ func NewError(code int, message string) Error {
 		message: message,
 	}
 }
+
+// Check if error is a core error
+func IsError(err error, code int) bool {
+	e, ok := err.(Error)
+	if !ok {
+		return false
+	}
+	return e.IsError(code)
+}

@@ -2,6 +2,7 @@ package firebaseauth
 
 import (
 	"context"
+	"log"
 	"time"
 
 	firebase "firebase.google.com/go"
@@ -10,11 +11,13 @@ import (
 )
 
 type SessionServiceConfig struct {
+	AuthService    *core.AuthService
 	UserRepository core.UserRepository
 }
 
 type SessionService struct {
 	client *auth.Client
+	auth   *core.AuthService
 	users  core.UserRepository
 }
 
@@ -99,31 +102,47 @@ func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*co
 
 	userId := decodedToken.UID
 
-	isAdmin := false
-	if decodedToken.Claims["admin"] == true {
-		isAdmin = true
-	}
-
 	user, err := ss.users.FindById(ctx, userId)
 	if err != nil {
 		return nil, core.NewError(core.InternalError, "An error occurred")
 	}
 
+	role, err := ss.getUserRole(ctx, user.Id)
+	if err != nil {
+		log.Printf("ERROR: FIREBASEAUTH-VERIFY - %v", err.Error())
+		return nil, core.NewError(core.InternalError, "Could not verify session")
+	}
+
 	return &core.SessionUser{
-		Admin: isAdmin,
-		User:  user,
+		Role: role,
+		User: user,
 	}, nil
 }
 
-func (auth *SessionService) RevokeSession(ctx context.Context, uid string) error {
-	err := auth.client.RevokeRefreshTokens(ctx, uid)
+func (ss *SessionService) getUserRole(ctx context.Context, userId string) (core.Role, error) {
+	role, err := ss.auth.GetUserRole(ctx, userId)
+	if err != nil {
+		if !core.IsError(err, core.NotFoundError) {
+			return core.Role{}, err
+		}
+		role, err = ss.auth.GiveUserRoleByName(ctx, userId, "user")
+		if err != nil {
+			return core.Role{}, err
+		}
+	}
+
+	return role, nil
+}
+
+func (ss *SessionService) RevokeSession(ctx context.Context, uid string) error {
+	err := ss.client.RevokeRefreshTokens(ctx, uid)
 	if err != nil {
 		return core.NewError(core.InternalError, "Failed to sign out everywhere")
 	}
 	return nil
 }
 
-// Creates a Firebase Auth implementation of AuthService
+// Creates a Firebase Auth implementation of SessionService
 func NewSessionService(ctx context.Context, config SessionServiceConfig) (*SessionService, error) {
 	firebaseApp, err := firebase.NewApp(ctx, &firebase.Config{})
 	if err != nil {
@@ -138,5 +157,6 @@ func NewSessionService(ctx context.Context, config SessionServiceConfig) (*Sessi
 	return &SessionService{
 		client: authClient,
 		users:  config.UserRepository,
+		auth:   config.AuthService,
 	}, nil
 }
