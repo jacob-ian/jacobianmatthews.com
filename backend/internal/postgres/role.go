@@ -22,7 +22,7 @@ func (rr *RoleRepository) FindByName(ctx context.Context, name string) (core.Rol
             name = $1 
             AND deleted_at IS NULL;
     `
-	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
+	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role.Id, &role.Name, &role.CreatedAt, &role.DeletedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.Role{}, core.NewError(core.NotFoundError, "Role not found")
@@ -47,7 +47,7 @@ func (rr *RoleRepository) FindAll(ctx context.Context) ([]core.Role, error) {
 	var roles []core.Role
 	for rows.Next() {
 		var role core.Role
-		err := rows.Scan(&role)
+		err := rows.Scan(&role.Id, &role.Name, &role.CreatedAt, &role.DeletedAt)
 		if err != nil {
 			log.Printf("ERROR: DB_ROLE_FINDALL - %v", err.Error())
 			return []core.Role{}, core.NewError(core.InternalError, "Could not get roles")
@@ -69,7 +69,7 @@ func (rr *RoleRepository) Create(ctx context.Context, name string) (core.Role, e
             (gen_random_uuid(), $1)
         RETURNING *;
     `
-	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role)
+	err := rr.db.QueryRowContext(ctx, query, name).Scan(&role.Id, &role.Name, &role.CreatedAt, &role.DeletedAt)
 	if err != nil {
 		log.Printf("ERROR: DB_ROLE_CREATE - %v", err.Error())
 		return core.Role{}, core.NewError(core.InternalError, "Could not create role")
