@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 )
 
 func TestAddCsrfToken(t *testing.T) {
