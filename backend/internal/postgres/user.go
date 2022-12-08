@@ -23,47 +23,34 @@ func (ur *UserRepository) FindById(ctx context.Context, id string) (core.User, e
             id = $1 
             AND deleted_at IS NULL;
     `
-	err := ur.db.QueryRowContext(ctx, statement, id).Scan(&user)
+	err := ur.db.QueryRowContext(ctx, statement, id).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Email,
+		&user.EmailVerified,
+		&user.ImageUrl,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.DeletedAt,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.User{}, core.NewError(core.NotFoundError, "User not found")
 		}
 		log.Printf("ERROR: DB_USERS_FINDBYID - %v", err.Error())
-		return core.User{}, core.NewError(core.InternalError, "An error occurred")
+		return core.User{}, core.NewError(core.InternalError, "Could not get user")
 	}
 	return user, nil
 }
 
-func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) ([]core.User, error) {
+func (us *UserRepository) FindAll(ctx context.Context) ([]core.User, error) {
 	statement := `
         SELECT * 
         FROM users 
         WHERE deleted_at IS NULL
         ORDER BY name ASC;
     `
-	conditions := make([]string, 2)
-	if filter.Name != "" {
-		conditions = append(conditions, "name = $1")
-	}
-	if filter.Email != "" {
-		conditions = append(conditions, "email = $2")
-	}
-
-	clen := len(conditions)
-	if clen != 0 {
-		statement = statement + "\nWHERE "
-	}
-
-	for i := range conditions {
-		c := conditions[i]
-		statement = statement + c
-		if clen > 1 && i != clen-1 {
-			statement = statement + ", "
-		} else {
-			statement = statement + " "
-		}
-	}
-	rows, err := us.db.QueryContext(ctx, statement, filter.Name, filter.Email)
+	rows, err := us.db.QueryContext(ctx, statement)
 	if err != nil {
 		log.Printf("ERROR: DB_USERS_FINDALL - %v", err.Error())
 		return []core.User{}, core.NewError(core.InternalError, "Could not get users")
@@ -73,8 +60,16 @@ func (us *UserRepository) FindAll(ctx context.Context, filter core.UserFilter) (
 	var users []core.User
 	for rows.Next() {
 		var user core.User
-		err := rows.Scan(&user)
-		if err != nil {
+		if err := rows.Scan(
+			&user.Id,
+			&user.Name,
+			&user.Email,
+			&user.EmailVerified,
+			&user.ImageUrl,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.DeletedAt,
+		); err != nil {
 			log.Printf("ERROR: DB_USERS_FINDALL - %v", err.Error())
 			return []core.User{}, core.NewError(core.InternalError, "Could not get users")
 		}
@@ -94,7 +89,16 @@ func (us *UserRepository) Create(ctx context.Context, user core.NewUser) (core.U
             ($1, $2, $3, $4, $5)
         RETURNING *;
     `
-	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&newUser)
+	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(
+		&newUser.Id,
+		&newUser.Name,
+		&newUser.Email,
+		&newUser.EmailVerified,
+		&newUser.ImageUrl,
+		&newUser.CreatedAt,
+		&newUser.UpdatedAt,
+		&newUser.DeletedAt,
+	)
 	if err != nil {
 		log.Printf("ERROR: DB_USERS_CREATE - %v", err.Error())
 		return core.User{}, core.NewError(core.InternalError, "Could not create user")
@@ -118,8 +122,24 @@ func (us *UserRepository) Update(ctx context.Context, user core.User) (core.User
             AND deleted_at IS NULL
         RETURNING *;
     `
-	err := us.db.QueryRowContext(ctx, statement, user.Id, user.Name, user.Email, user.EmailVerified, user.ImageUrl).Scan(&updated)
-	if err != nil {
+	if err := us.db.QueryRowContext(
+		ctx,
+		statement,
+		user.Id,
+		user.Name,
+		user.Email,
+		user.EmailVerified,
+		user.ImageUrl,
+	).Scan(
+		&updated.Id,
+		&updated.Name,
+		&updated.Email,
+		&updated.EmailVerified,
+		&updated.ImageUrl,
+		&updated.CreatedAt,
+		&updated.UpdatedAt,
+		&updated.DeletedAt,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.User{}, core.NewError(core.NotFoundError, "User not found")
 		}
@@ -139,8 +159,7 @@ func (us *UserRepository) Delete(ctx context.Context, id string) error {
             id = $1 
             AND deleted_at IS NULL;
     `
-	err := us.db.QueryRowContext(ctx, statement, id).Err()
-	if err != nil {
+	if err := us.db.QueryRowContext(ctx, statement, id).Err(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.NewError(core.NotFoundError, "User not found")
 		}

@@ -17,7 +17,7 @@ type User struct {
 }
 
 type UserRepository interface {
-	FindAll(ctx context.Context, filter UserFilter) ([]User, error)
+	FindAll(ctx context.Context) ([]User, error)
 	FindById(ctx context.Context, id string) (User, error)
 	Create(ctx context.Context, user NewUser) (User, error)
 	Update(ctx context.Context, user User) (User, error)
@@ -30,11 +30,4 @@ type NewUser struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"emailVerified"`
 	ImageUrl      string `json:"imageUrl"`
-}
-
-type UserFilter struct {
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
 }

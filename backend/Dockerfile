@@ -1,7 +1,7 @@
 # MUST BE BUILT WITH ROOT CONTEXT
 # DEVELOPMENT ENVIRONMENT
 FROM golang:1.19-alpine as dev
-RUN apk add --update make postgresql-client
+RUN apk add --update make postgresql-client gcc musl-dev
 
 RUN go install github.com/cosmtrek/air@latest
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
