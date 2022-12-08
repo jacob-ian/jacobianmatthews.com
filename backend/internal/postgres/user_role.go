@@ -24,8 +24,12 @@ func (urr *UserRoleRepository) FindRoleByUserId(ctx context.Context, userId stri
         WHERE user_role.user_id = $1 
             AND user_role.deleted_at IS NULL;
     `
-	err := urr.db.QueryRowContext(ctx, query, userId).Scan(&role)
-	if err != nil {
+	if err := urr.db.QueryRowContext(ctx, query, userId).Scan(
+		&role.Id,
+		&role.Name,
+		&role.CreatedAt,
+		&role.DeletedAt,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.Role{}, core.NewError(core.NotFoundError, "Role not found")
 		}
@@ -43,13 +47,19 @@ func (urr *UserRoleRepository) FindById(ctx context.Context, id uuid.UUID) (core
         WHERE id = $1 
             AND deleted_at IS NULL;
     `
-	err := urr.db.QueryRowContext(ctx, query, id).Scan(&userRole)
-	if err != nil {
+	if err := urr.db.QueryRowContext(ctx, query, id).Scan(
+		&userRole.Id,
+		&userRole.UserId,
+		&userRole.RoleId,
+		&userRole.CreatedAt,
+		&userRole.UpdatedAt,
+		&userRole.DeletedAt,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return core.UserRole{}, core.NewError(core.NotFoundError, "Role not found")
+			return core.UserRole{}, core.NewError(core.NotFoundError, "User role not found")
 		}
 		log.Printf("ERROR: DB_USERROLE_FINDBYID - %v", err.Error())
-		return core.UserRole{}, core.NewError(core.InternalError, "Could not find role")
+		return core.UserRole{}, core.NewError(core.InternalError, "Could not find user role")
 	}
 	return userRole, nil
 }
@@ -61,15 +71,26 @@ func (urr *UserRoleRepository) Create(ctx context.Context, userId string, roleId
             (gen_random_uuid(), $1, $2)
         RETURNING *;
     `
-	err := urr.db.QueryRowContext(ctx, query, userId, roleId).Scan(&userRole)
-	if err != nil {
+	if err := urr.db.QueryRowContext(
+		ctx,
+		query,
+		userId,
+		roleId,
+	).Scan(
+		&userRole.Id,
+		&userRole.UserId,
+		&userRole.RoleId,
+		&userRole.CreatedAt,
+		&userRole.UpdatedAt,
+		&userRole.DeletedAt,
+	); err != nil {
 		log.Printf("ERROR: DB_USERROLE_CREATE - %v", err.Error())
 		return core.UserRole{}, core.NewError(core.InternalError, "Could not create user role")
 	}
 	return userRole, nil
 }
 
-func (urr *UserRoleRepository) UpdateByUserId(ctx context.Context, userId string, roleId string) (core.UserRole, error) {
+func (urr *UserRoleRepository) UpdateByUserId(ctx context.Context, userId string, roleId uuid.UUID) (core.UserRole, error) {
 	var updated core.UserRole
 	query := `
         UPDATE user_role
@@ -81,8 +102,19 @@ func (urr *UserRoleRepository) UpdateByUserId(ctx context.Context, userId string
             AND deleted_at IS NULL
         RETURNING *;
     `
-	err := urr.db.QueryRowContext(ctx, query, userId, roleId).Scan(&updated)
-	if err != nil {
+	if err := urr.db.QueryRowContext(
+		ctx,
+		query,
+		userId,
+		roleId,
+	).Scan(
+		&updated.Id,
+		&updated.UserId,
+		&updated.RoleId,
+		&updated.CreatedAt,
+		&updated.UpdatedAt,
+		&updated.DeletedAt,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.UserRole{}, core.NewError(core.NotFoundError, "User role not found")
 		}
@@ -102,8 +134,11 @@ func (urr *UserRoleRepository) DeleteByUserId(ctx context.Context, userId string
             user_id = $1 
             AND deleted_at IS NULL
     `
-	err := urr.db.QueryRowContext(ctx, query, userId).Err()
-	if err != nil {
+	if err := urr.db.QueryRowContext(
+		ctx,
+		query,
+		userId,
+	).Err(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.NewError(core.NotFoundError, "User role not found")
 		}

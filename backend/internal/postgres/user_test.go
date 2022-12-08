@@ -14,21 +14,21 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 )
 
-type suite struct {
+type userSuite struct {
 	ExpectedQuery string
-	Tests         []test
+	Tests         []userTest
 	Columns       []string
 	ToValueSlice  func(u core.User) []driver.Value
 }
 
-type test struct {
+type userTest struct {
 	DriverError   error
 	ExpectedError error
 	Rows          [][]driver.Value
 	Fn            func(ur *postgres.UserRepository) ([]core.User, error)
 }
 
-func runUserMockDbTests(t *testing.T, suite suite) {
+func runUserMockDbTests(t *testing.T, suite userSuite) {
 	for i := range suite.Tests {
 		test := suite.Tests[i]
 
@@ -78,7 +78,7 @@ func runUserMockDbTests(t *testing.T, suite suite) {
 }
 
 func TestUserRepository_FindById(t *testing.T) {
-	runUserMockDbTests(t, suite{
+	runUserMockDbTests(t, userSuite{
 		ExpectedQuery: `SELECT \* FROM users`,
 		Columns:       []string{"id", "name", "email", "email_verified", "image_url", "created_at", "updated_at", "deleted_at"},
 		ToValueSlice: func(value core.User) []driver.Value {
@@ -93,7 +93,7 @@ func TestUserRepository_FindById(t *testing.T) {
 				value.DeletedAt,
 			}
 		},
-		Tests: []test{
+		Tests: []userTest{
 			{
 				DriverError:   nil,
 				ExpectedError: nil,
@@ -138,7 +138,7 @@ func TestUserRepository_FindById(t *testing.T) {
 }
 
 func TestUserRepository_FindAll(t *testing.T) {
-	runUserMockDbTests(t, suite{
+	runUserMockDbTests(t, userSuite{
 		ExpectedQuery: `SELECT \* FROM users`,
 		Columns:       []string{"id", "name", "email", "email_verified", "image_url", "created_at", "updated_at", "deleted_at"},
 		ToValueSlice: func(value core.User) []driver.Value {
@@ -153,7 +153,7 @@ func TestUserRepository_FindAll(t *testing.T) {
 				value.DeletedAt,
 			}
 		},
-		Tests: []test{
+		Tests: []userTest{
 			{
 				DriverError:   nil,
 				ExpectedError: nil,
@@ -210,7 +210,7 @@ func TestUserRepository_Create(t *testing.T) {
 		Email:         "new@email.com",
 		EmailVerified: false,
 	}
-	runUserMockDbTests(t, suite{
+	runUserMockDbTests(t, userSuite{
 		ExpectedQuery: `INSERT INTO users`,
 		Columns:       []string{"id", "name", "email", "email_verified", "image_url", "created_at", "updated_at", "deleted_at"},
 		ToValueSlice: func(value core.User) []driver.Value {
@@ -225,7 +225,7 @@ func TestUserRepository_Create(t *testing.T) {
 				value.DeletedAt,
 			}
 		},
-		Tests: []test{
+		Tests: []userTest{
 			{
 				DriverError:   nil,
 				ExpectedError: nil,
@@ -278,7 +278,7 @@ func TestUserRepository_Update(t *testing.T) {
 		CreatedAt:     time.Date(2022, time.September, 13, 12, 0, 0, 0, time.Local),
 		UpdatedAt:     time.Now(),
 	}
-	runUserMockDbTests(t, suite{
+	runUserMockDbTests(t, userSuite{
 		ExpectedQuery: `UPDATE users`,
 		Columns:       []string{"id", "name", "email", "email_verified", "image_url", "created_at", "updated_at", "deleted_at"},
 		ToValueSlice: func(value core.User) []driver.Value {
@@ -293,7 +293,7 @@ func TestUserRepository_Update(t *testing.T) {
 				value.DeletedAt,
 			}
 		},
-		Tests: []test{
+		Tests: []userTest{
 			{
 				DriverError:   nil,
 				ExpectedError: nil,
@@ -337,7 +337,7 @@ func TestUserRepository_Update(t *testing.T) {
 }
 
 func TestUserRepository_Delete(t *testing.T) {
-	runUserMockDbTests(t, suite{
+	runUserMockDbTests(t, userSuite{
 		ExpectedQuery: `UPDATE users`,
 		Columns:       []string{"id", "name", "email", "email_verified", "image_url", "created_at", "updated_at", "deleted_at"},
 		ToValueSlice: func(value core.User) []driver.Value {
@@ -352,7 +352,7 @@ func TestUserRepository_Delete(t *testing.T) {
 				value.DeletedAt,
 			}
 		},
-		Tests: []test{
+		Tests: []userTest{
 			{
 				DriverError:   nil,
 				ExpectedError: nil,
