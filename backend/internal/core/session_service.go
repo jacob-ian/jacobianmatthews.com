@@ -42,8 +42,14 @@ type SessionUser struct {
 
 type SessionService struct {
 	provider    AuthProvider
-	authService AuthService
 	users       UserRepository
+	authService *AuthService
+}
+
+type SessionServiceConfig struct {
+	AuthProvider   AuthProvider
+	UserRepository UserRepository
+	AuthService    *AuthService
 }
 
 // Starts a session given an IDToken
@@ -139,14 +145,8 @@ func (ss *SessionService) VerifySession(ctx context.Context, sessionCookie strin
 	}, nil
 }
 
-type SessionServiceConfig struct {
-	AuthProvider   AuthProvider
-	UserRepository UserRepository
-	AuthService    AuthService
-}
-
 // Create a new Session Service given an Auth Provider (e.g. Firebase Auth)
-func NewSessionService(ctx context.Context, config SessionServiceConfig) *SessionService {
+func NewSessionService(config SessionServiceConfig) *SessionService {
 	return &SessionService{
 		provider:    config.AuthProvider,
 		users:       config.UserRepository,

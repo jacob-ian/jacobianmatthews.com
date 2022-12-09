@@ -14,7 +14,7 @@ type FirebaseAuthProvider struct {
 	client *auth.Client
 }
 
-func (fb *FirebaseAuthProvider) VerifyAuthToken(ctx context.Context, token string) (*core.Token, error) {
+func (fb *FirebaseAuthProvider) VerifyIdToken(ctx context.Context, token string) (*core.Token, error) {
 	decodedToken, err := fb.client.VerifyIDToken(ctx, token)
 	if err != nil {
 		return nil, core.NewError(core.BadRequestError, "Invalid Token")

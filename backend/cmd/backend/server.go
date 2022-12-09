@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/firebaseauth"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
@@ -30,17 +31,15 @@ func main() {
 		}
 	}
 
-	sessions, err := firebaseauth.NewSessionService(ctx, firebaseauth.SessionServiceConfig{
-		UserRepository: db.UserRepository,
-	})
+	firebaseAuthProvider, err := firebaseauth.NewAuthProvider(ctx)
 	if err != nil {
-		log.Fatalf("Could not create session service: %v", err.Error())
+		log.Fatalf("Could not create auth provider: %v", err.Error())
 	}
 
 	app, err := http.NewApplication(ctx, http.Config{
-		Port:           getPort(),
-		Database:       db,
-		SessionService: sessions,
+		Port:         getPort(),
+		Database:     db,
+		AuthProvider: firebaseAuthProvider,
 	})
 	if err != nil {
 		log.Fatalf("Could not create HTTP Application: %v", err.Error())

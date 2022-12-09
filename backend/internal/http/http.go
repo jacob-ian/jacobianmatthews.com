@@ -10,17 +10,17 @@ import (
 )
 
 type Config struct {
-	Port           uint16
-	Host           string
-	Database       *postgres.Database
-	SessionService core.SessionService
+	Port         uint16
+	Host         string
+	Database     *postgres.Database
+	AuthProvider core.AuthProvider
 }
 
 type Application struct {
 	router         *http.ServeMux
 	server         *http.Server
 	database       *postgres.Database
-	sessionService core.SessionService
+	sessionService *core.SessionService
 }
 
 func (a *Application) Serve() error {
@@ -39,14 +39,24 @@ func (a *Application) Shutdown(ctx context.Context) error {
 
 // Creates a new HTTP Applicaton
 func NewApplication(ctx context.Context, config Config) (*Application, error) {
-	mux := http.NewServeMux()
+	db := config.Database
+	authService := core.NewAuthService(core.AuthServiceConfig{
+		UserRepository:     db.UserRepository,
+		UserRoleRepository: db.UserRoleRepository,
+		RoleRepository:     db.RoleRepository,
+	})
+	sessionService := core.NewSessionService(core.SessionServiceConfig{
+		AuthService:    authService,
+		AuthProvider:   config.AuthProvider,
+		UserRepository: db.UserRepository,
+	})
 
+	mux := http.NewServeMux()
 	handler := NewGlobalMiddleware(mux, GlobalMiddlewareConfig{
 		CorsOrigin: "localhost:3001",
 		Accept:     "application/json, application/grpc-web",
 	})
-
-	withAuth := NewAuthMiddleware(handler, config.SessionService)
+	withAuth := NewAuthMiddleware(handler, sessionService)
 
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),
@@ -55,7 +65,7 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 
 	app := &Application{
 		database:       config.Database,
-		sessionService: config.SessionService,
+		sessionService: sessionService,
 		server:         &srv,
 		router:         mux,
 	}
