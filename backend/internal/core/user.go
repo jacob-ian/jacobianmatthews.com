@@ -18,6 +18,7 @@ type User struct {
 
 type UserRepository interface {
 	FindAll(ctx context.Context) ([]User, error)
+	// Finds a user by ID. Throws a NotFound error if cannot find the User by ID
 	FindById(ctx context.Context, id string) (User, error)
 	Create(ctx context.Context, user NewUser) (User, error)
 	Update(ctx context.Context, user User) (User, error)

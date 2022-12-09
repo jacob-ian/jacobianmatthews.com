@@ -16,32 +16,32 @@ type SessionServiceConfig struct {
 }
 
 type SessionService struct {
-	client *auth.Client
-	auth   *core.AuthService
-	users  core.UserRepository
+	firebase *auth.Client
+	auth     *core.AuthService
+	users    core.UserRepository
 }
 
 // Creates a session from a Firebase Auth ID Token
 func (ss *SessionService) CreateSession(ctx context.Context, idToken string) (core.Session, error) {
-	decodedToken, err := ss.client.VerifyIDToken(ctx, idToken)
+	decodedToken, err := ss.firebase.VerifyIDToken(ctx, idToken)
 	if err != nil {
 		return core.Session{}, core.NewError(core.BadRequestError, "Invalid ID Token")
 	}
 
-	if !authenticatedWithin(decodedToken, time.Minute*5) {
+	if !authenticatedWithinTime(decodedToken, time.Minute*5) {
 		return core.Session{}, core.NewError(core.UnauthenticatedError, "Unauthenticated")
 	}
 
-	_, err = ss.findOrCreateUser(ctx, decodedToken)
-	if err != nil {
+	if err = ss.registerIfNewUser(ctx, decodedToken.UID); err != nil {
 		return core.Session{}, err
 	}
 
 	sessionExpiresIn := time.Minute * 15
-	cookie, err := ss.client.SessionCookie(ctx, idToken, sessionExpiresIn)
+	cookie, err := ss.firebase.SessionCookie(ctx, idToken, sessionExpiresIn)
 	if err != nil {
 		return core.Session{}, core.NewError(core.InternalError, "An error occurred whilst signing in")
 	}
+
 	return core.Session{
 		Cookie:    cookie,
 		ExpiresIn: sessionExpiresIn,
@@ -49,53 +49,48 @@ func (ss *SessionService) CreateSession(ctx context.Context, idToken string) (co
 }
 
 // Check that ID token was authenticated within a time duration
-func authenticatedWithin(token *auth.Token, duration time.Duration) bool {
+func authenticatedWithinTime(token *auth.Token, duration time.Duration) bool {
 	now := time.Now().Unix()
 	timeOfAuth := token.Claims["auth_time"].(int64)
 	return now-timeOfAuth < int64(duration)
 }
 
-// Finds the associated user or creates one
-func (ss *SessionService) findOrCreateUser(ctx context.Context, token *auth.Token) (core.User, error) {
-	createUser := false
-	user, err := ss.users.FindById(ctx, token.UID)
+// Checks if given user exists and creates one if they don't
+func (ss *SessionService) registerIfNewUser(ctx context.Context, userId string) error {
+	_, err := ss.users.FindById(ctx, userId)
+	if err == nil {
+		return nil
+	}
+
+	if !core.IsError(err, core.NotFoundError) {
+		return err
+	}
+
+	firebaseUser, err := ss.firebase.GetUser(ctx, userId)
 	if err != nil {
-		if e, ok := err.(*core.Error); ok {
-			if e.IsError(core.NotFoundError) {
-				createUser = true
-			} else {
-				return core.User{}, e
-			}
-		}
-		return core.User{}, err
+		return core.NewError(core.InternalError, "Invalid Firebase User ID")
 	}
 
-	if !createUser {
-		return user, nil
+	if _, err := ss.users.Create(ctx, core.NewUser{
+		Id:            firebaseUser.UID,
+		Name:          firebaseUser.DisplayName,
+		Email:         firebaseUser.Email,
+		EmailVerified: firebaseUser.EmailVerified,
+		ImageUrl:      firebaseUser.PhotoURL,
+	}); err != nil {
+		return err
 	}
 
-	fUser, err := ss.client.GetUser(ctx, token.UID)
-	if err != nil {
-		return core.User{}, core.NewError(core.InternalError, "Invalid User ID")
+	if _, err = ss.auth.GiveUserRoleByName(ctx, userId, "User"); err != nil {
+		return err
 	}
 
-	user, err = ss.users.Create(ctx, core.NewUser{
-		Id:            fUser.UID,
-		Name:          fUser.DisplayName,
-		Email:         fUser.Email,
-		EmailVerified: fUser.EmailVerified,
-		ImageUrl:      fUser.PhotoURL,
-	})
-	if err != nil {
-		return core.User{}, err
-	}
-
-	return user, nil
+	return nil
 }
 
 // Verifies a session
 func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*core.SessionUser, error) {
-	decodedToken, err := ss.client.VerifySessionCookieAndCheckRevoked(ctx, cookie)
+	decodedToken, err := ss.firebase.VerifySessionCookie(ctx, cookie)
 	if err != nil {
 		return nil, core.NewError(core.UnauthenticatedError, "Invalid session")
 	}
@@ -107,7 +102,7 @@ func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*co
 		return nil, core.NewError(core.InternalError, "An error occurred")
 	}
 
-	role, err := ss.getUserRole(ctx, user.Id)
+	role, err := ss.auth.GetOrGiveUserRole(ctx, user.Id, "User")
 	if err != nil {
 		log.Printf("ERROR: FIREBASEAUTH-VERIFY - %v", err.Error())
 		return nil, core.NewError(core.InternalError, "Could not verify session")
@@ -119,23 +114,8 @@ func (ss *SessionService) VerifySession(ctx context.Context, cookie string) (*co
 	}, nil
 }
 
-func (ss *SessionService) getUserRole(ctx context.Context, userId string) (core.Role, error) {
-	role, err := ss.auth.GetUserRole(ctx, userId)
-	if err != nil {
-		if !core.IsError(err, core.NotFoundError) {
-			return core.Role{}, err
-		}
-		role, err = ss.auth.GiveUserRoleByName(ctx, userId, "user")
-		if err != nil {
-			return core.Role{}, err
-		}
-	}
-
-	return role, nil
-}
-
 func (ss *SessionService) RevokeSession(ctx context.Context, uid string) error {
-	err := ss.client.RevokeRefreshTokens(ctx, uid)
+	err := ss.firebase.RevokeRefreshTokens(ctx, uid)
 	if err != nil {
 		return core.NewError(core.InternalError, "Failed to sign out everywhere")
 	}
@@ -155,8 +135,8 @@ func NewSessionService(ctx context.Context, config SessionServiceConfig) (*Sessi
 	}
 
 	return &SessionService{
-		client: authClient,
-		users:  config.UserRepository,
-		auth:   config.AuthService,
+		firebase: authClient,
+		users:    config.UserRepository,
+		auth:     config.AuthService,
 	}, nil
 }
