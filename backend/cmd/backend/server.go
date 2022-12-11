@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/firebaseauth"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"

@@ -4,25 +4,31 @@ import (
 	"context"
 )
 
-type AuthService struct {
+type AuthService interface {
+	GetUserRole(ctx context.Context, userId string) (Role, error)
+	GiveUserRoleByName(ctx context.Context, userId string, roleName string) (Role, error)
+	GetOrGiveUserRole(ctx context.Context, userId string, roleName string) (Role, error)
+}
+
+type CoreAuthService struct {
 	users     UserRepository
 	roles     RoleRepository
 	userRoles UserRoleRepository
 }
 
-type AuthServiceConfig struct {
+type CoreAuthServiceConfig struct {
 	UserRepository     UserRepository
 	RoleRepository     RoleRepository
 	UserRoleRepository UserRoleRepository
 }
 
 // Gets the user's role
-func (auth *AuthService) GetUserRole(ctx context.Context, userId string) (Role, error) {
+func (auth *CoreAuthService) GetUserRole(ctx context.Context, userId string) (Role, error) {
 	return auth.userRoles.FindRoleByUserId(ctx, userId)
 }
 
 // Gives a user a role by name
-func (auth *AuthService) GiveUserRoleByName(ctx context.Context, userId string, roleName string) (Role, error) {
+func (auth *CoreAuthService) GiveUserRoleByName(ctx context.Context, userId string, roleName string) (Role, error) {
 	role, err := auth.roles.FindByName(ctx, roleName)
 	if err != nil {
 		return Role{}, err
@@ -36,7 +42,7 @@ func (auth *AuthService) GiveUserRoleByName(ctx context.Context, userId string, 
 }
 
 // Gets the user's role. If they don't have one, it gives the user the role provided by name.
-func (auth *AuthService) GetOrGiveUserRole(ctx context.Context, userId string, roleName string) (Role, error) {
+func (auth *CoreAuthService) GetOrGiveUserRole(ctx context.Context, userId string, roleName string) (Role, error) {
 	role, err := auth.GetUserRole(ctx, userId)
 	if err == nil {
 		return role, nil
@@ -51,8 +57,8 @@ func (auth *AuthService) GetOrGiveUserRole(ctx context.Context, userId string, r
 	return role, nil
 }
 
-func NewAuthService(config AuthServiceConfig) *AuthService {
-	return &AuthService{
+func NewAuthService(config CoreAuthServiceConfig) *CoreAuthService {
+	return &CoreAuthService{
 		users:     config.UserRepository,
 		roles:     config.RoleRepository,
 		userRoles: config.UserRoleRepository,

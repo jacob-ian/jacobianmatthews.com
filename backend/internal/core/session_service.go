@@ -6,30 +6,6 @@ import (
 	"time"
 )
 
-type Token struct {
-	Subject string
-	Claims  map[string]any
-}
-
-type AuthProviderUser struct {
-	Id            string
-	DisplayName   string
-	Email         string
-	EmailVerified bool
-	ImageUrl      string
-}
-
-type AuthProvider interface {
-	// Verifies an ID token
-	VerifyIdToken(ctx context.Context, token string) (*Token, error)
-	// Verifies a session cookie
-	VerifySessionCookie(ctx context.Context, sessionCookie string) (*Token, error)
-	// Creates a session cookie (token)
-	CreateSessionCookie(ctx context.Context, idToken string, expiresIn time.Duration) (string, error)
-	// Gets the user's details from the Identity Provider (Google, Apple)
-	GetUserDetails(ctx context.Context, userId string) (AuthProviderUser, error)
-}
-
 type Session struct {
 	Cookie    string
 	ExpiresIn time.Duration
@@ -43,13 +19,13 @@ type SessionUser struct {
 type SessionService struct {
 	provider    AuthProvider
 	users       UserRepository
-	authService *AuthService
+	authService AuthService
 }
 
 type SessionServiceConfig struct {
 	AuthProvider   AuthProvider
 	UserRepository UserRepository
-	AuthService    *AuthService
+	AuthService    AuthService
 }
 
 // Starts a session given an IDToken

@@ -40,7 +40,7 @@ func (a *Application) Shutdown(ctx context.Context) error {
 // Creates a new HTTP Applicaton
 func NewApplication(ctx context.Context, config Config) (*Application, error) {
 	db := config.Database
-	authService := core.NewAuthService(core.AuthServiceConfig{
+	authService := core.NewAuthService(core.CoreAuthServiceConfig{
 		UserRepository:     db.UserRepository,
 		UserRoleRepository: db.UserRoleRepository,
 		RoleRepository:     db.RoleRepository,

@@ -26,11 +26,11 @@ type logOutResponse struct {
 func (a *Application) connectAuthControllers(ctx context.Context, route string) {
 	a.router.Handle(route+"/login", handleLogin(a.sessionService))
 	a.router.Handle(route+"/logout", handleLogout(a.sessionService))
-	a.router.Handle(route+"/me", handleMe(a.sessionService))
+	a.router.Handle(route+"/me", handleMe())
 }
 
 // Attempt to sign the user into the website
-func handleLogin(sessionService core.SessionService) http.HandlerFunc {
+func handleLogin(sessionService *core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -49,7 +49,7 @@ func handleLogin(sessionService core.SessionService) http.HandlerFunc {
 			return
 		}
 
-		session, err := sessionService.CreateSession(r.Context(), payload.IdToken)
+		session, err := sessionService.StartSession(r.Context(), payload.IdToken)
 		if err != nil {
 			NewResponseWriter(w, r).HandleError(err)
 			return
@@ -72,22 +72,16 @@ func handleLogin(sessionService core.SessionService) http.HandlerFunc {
 }
 
 // Revokes the user's session (signs the user out)
-func handleLogout(sessionService core.SessionService) http.HandlerFunc {
+func handleLogout(sessionService *core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		user, ok := core.UserFromContext(r.Context())
+		_, ok := core.UserFromContext(r.Context())
 		if !ok {
 			NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
-			return
-		}
-
-		err := sessionService.RevokeSession(r.Context(), user.User.Id)
-		if err != nil {
-			NewResponseWriter(w, r).HandleError(err)
 			return
 		}
 
@@ -104,7 +98,7 @@ func handleLogout(sessionService core.SessionService) http.HandlerFunc {
 }
 
 // Return the details for the currently signed in user
-func handleMe(session core.SessionService) http.HandlerFunc {
+func handleMe() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)

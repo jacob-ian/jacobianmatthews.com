@@ -1,0 +1,174 @@
+package core_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
+)
+
+type sessionServiceTest struct {
+	Name                  string
+	AuthProviderValues    mock.MockAuthProviderValues
+	UserRespositoryValues mock.MockUserRepositoryValues
+	AuthServiceValues     mock.MockAuthServiceValues
+	ExpectedOutput        any
+	ExpectedError         error
+}
+
+type sessionServiceSuite struct {
+	Func  func(service *core.SessionService) (any, error)
+	Tests []sessionServiceTest
+}
+
+func runSessionServiceSuite(t *testing.T, suite sessionServiceSuite) {
+	tests := suite.Tests
+	for i := range tests {
+		test := tests[i]
+
+		service := core.NewSessionService(core.SessionServiceConfig{
+			AuthProvider:   mock.NewAuthProvider(test.AuthProviderValues),
+			UserRepository: mock.NewUserRepository(test.UserRespositoryValues),
+			AuthService:    mock.NewAuthService(test.AuthServiceValues),
+		})
+
+		res, err := suite.Func(service)
+
+		if want, got := test.ExpectedError, err; want != got {
+			t.Errorf("'%v' failed. Unexpected error, want %v got %v", test.Name, want, got)
+		}
+
+		if want, got := test.ExpectedOutput, res; want != got {
+			t.Errorf("'%v' failed. Unexpected output, want %v got %v", test.Name, want, got)
+		}
+	}
+}
+
+func TestSessionService_StartSession(t *testing.T) {
+	runSessionServiceSuite(t, sessionServiceSuite{
+		Func: func(s *core.SessionService) (any, error) {
+			return s.StartSession(context.Background(), "idToken")
+		},
+		Tests: []sessionServiceTest{
+			{
+				Name: "Should all pass",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix(),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedError: nil,
+				ExpectedOutput: core.Session{
+					Cookie:    "session-cookie",
+					ExpiresIn: time.Minute * 15,
+				},
+			},
+			{
+				Name: "Should fail if request has invalid ID Token",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{},
+						Error: errors.New("This is a dodgy token!"),
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedError:  core.NewError(core.BadRequestError, "Invalid ID Token"),
+				ExpectedOutput: core.Session{},
+			},
+			{
+				Name: "Should fail if user authenticated more than 5 minutes ago",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Add(-time.Minute * 6).Unix(),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.UnauthenticatedError, "Unauthenticated"),
+			},
+		},
+	})
+}
