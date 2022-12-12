@@ -19,6 +19,7 @@ type authMiddlewareTest struct {
 	ExpectedStatusCode       int
 	ExpectedContext          *core.SessionUser
 	ExpectedCookies          []nethttp.Cookie
+	ExpectedSetCookies       []nethttp.Cookie
 }
 
 type authMiddlewareSuite struct {
@@ -47,7 +48,9 @@ func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
 
 		m.ServeHTTP(rr, req)
 
-		if want, got := test.ExpectedStatusCode, rr.Result().StatusCode; want != got {
+		result := rr.Result()
+
+		if want, got := test.ExpectedStatusCode, result.StatusCode; want != got {
 			t.Errorf("'%v' failed. Unexpected status code, want %v got %v", test.Name, want, got)
 		}
 
@@ -59,6 +62,27 @@ func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
 		} else {
 			if want, got := test.ExpectedContext, userContext; want != got {
 				t.Errorf("'%v' failed. Unexpected request context, want %v got %v", test.Name, want, got)
+			}
+		}
+
+		setCookies := result.Cookies()
+		for k := range test.ExpectedSetCookies {
+			expected := test.ExpectedSetCookies[k]
+			var actual nethttp.Cookie
+			for j := range setCookies {
+				if cookie := setCookies[j]; cookie.Name == expected.Name {
+					actual = *cookie
+				}
+			}
+
+			if want, got := expected.Name, actual.Name; want != got {
+				t.Errorf("'%v' failed. Expected cookie %v", test.Name, want)
+			}
+			if want, got := expected.Value, actual.Value; want != got {
+				t.Errorf("'%v' failed. Unexpected cookie value, want %v got %v", test.Name, want, got)
+			}
+			if want, got := expected.MaxAge, actual.MaxAge; want != got {
+				t.Errorf("'%v' failed. Unexpected cookie MaxAge, want %v got %v", test.Name, want, got)
 			}
 		}
 	}
@@ -138,6 +162,13 @@ func TestAuthMiddleware(t *testing.T) {
 				ExpectedStatusCode: 400,
 				ExpectedContext:    nil,
 				ExpectedCookies: []nethttp.Cookie{
+					{
+						Name:   "session",
+						Value:  "session-cookie",
+						MaxAge: 10,
+					},
+				},
+				ExpectedSetCookies: []nethttp.Cookie{
 					{
 						Name:   "session",
 						Value:  "",

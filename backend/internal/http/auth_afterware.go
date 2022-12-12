@@ -14,6 +14,12 @@ func (a AuthAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return nil
 	}
+
+	// If cookie is set to be deleted, don't reset the expiry
+	if cookie.MaxAge >= 0 {
+		return nil
+	}
+
 	expiresIn := time.Minute * 15
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookie.Name,
