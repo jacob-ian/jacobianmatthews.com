@@ -30,7 +30,7 @@ func (a *Application) connectAuthControllers(ctx context.Context, route string) 
 }
 
 // Attempt to sign the user into the website
-func handleLogin(sessionService *core.SessionService) http.HandlerFunc {
+func handleLogin(sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -72,7 +72,7 @@ func handleLogin(sessionService *core.SessionService) http.HandlerFunc {
 }
 
 // Revokes the user's session (signs the user out)
-func handleLogout(sessionService *core.SessionService) http.HandlerFunc {
+func handleLogout(sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)

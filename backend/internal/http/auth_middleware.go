@@ -20,6 +20,11 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	user, err := m.sessions.VerifySession(r.Context(), cookie.Value)
 	if err != nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:   "session",
+			Value:  "",
+			MaxAge: -1,
+		})
 		NewResponseWriter(w, r).HandleError(err)
 		return
 	}

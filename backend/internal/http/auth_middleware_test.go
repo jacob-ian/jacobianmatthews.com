@@ -6,107 +6,145 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
 )
 
-type amTestConfig struct {
-	SessionCookie       string
-	VerifySessionOutput mock.MockVerifySessionOutput
+type authMiddlewareTest struct {
+	Name                     string
+	MockSessionServiceValues mock.MockSessionServiceValues
+	RequestCookies           []nethttp.Cookie
+	ExpectedStatusCode       int
+	ExpectedContext          *core.SessionUser
+	ExpectedCookies          []nethttp.Cookie
 }
 
-func setupAuthMiddlewareTest(config amTestConfig) (*httptest.ResponseRecorder, *nethttp.Request) {
-	rr := httptest.NewRecorder()
-	req := httptest.NewRequest(nethttp.MethodGet, "/", nil)
-	h := nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
-		req = r
-		w.WriteHeader(200)
-		w.Write([]byte("hello"))
-	})
-	a := mock.NewAuthService(mock.AuthServiceOutput{
-		VerifySession: config.VerifySessionOutput,
-	})
-	m := http.NewAuthMiddleware(h, a)
-	if config.SessionCookie != "" {
-		req.AddCookie(&nethttp.Cookie{
-			Name:   "session",
-			Value:  config.SessionCookie,
-			MaxAge: 10,
+type authMiddlewareSuite struct {
+	Tests []authMiddlewareTest
+}
+
+func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
+	for i := range suite.Tests {
+		test := suite.Tests[i]
+
+		rr := httptest.NewRecorder()
+		req := httptest.NewRequest(nethttp.MethodGet, "/", nil)
+		h := nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+			req = r
+			w.WriteHeader(200)
+			w.Write([]byte("hello"))
 		})
-	}
-	m.ServeHTTP(rr, req)
-	return rr, req
-}
 
-// When user is not signed in, it should not attach a user to context
-func TestNotSignedInPassThrough(t *testing.T) {
-	rr, req := setupAuthMiddlewareTest(amTestConfig{
-		SessionCookie: "",
-	})
+		a := mock.NewSessionService(test.MockSessionServiceValues)
+		m := http.NewAuthMiddleware(h, a)
 
-	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
-	if ok == true {
-		t.Errorf("Unexpected user in context: got %v want %v", userCtx, nil)
-	}
+		for j := range test.RequestCookies {
+			cookie := test.RequestCookies[j]
+			req.AddCookie(&cookie)
+		}
 
-	status := rr.Result().StatusCode
-	if status != nethttp.StatusOK {
-		t.Errorf("Unexpected status code: got %v want %v", status, nethttp.StatusOK)
-	}
-}
+		m.ServeHTTP(rr, req)
 
-// Should return an error code and request should not have user context
-func TestSessionVerifyErrorBlock(t *testing.T) {
-	rr, req := setupAuthMiddlewareTest(amTestConfig{
-		SessionCookie: "coookie",
-		VerifySessionOutput: mock.MockVerifySessionOutput{
-			Value: nil,
-			Error: core.NewError(core.BadRequestError, "Invalid session"),
-		},
-	})
+		if want, got := test.ExpectedStatusCode, rr.Result().StatusCode; want != got {
+			t.Errorf("'%v' failed. Unexpected status code, want %v got %v", test.Name, want, got)
+		}
 
-	status := rr.Result().StatusCode
-	if status != core.BadRequestError {
-		t.Errorf("Unexpected status code: got %v want %v", status, core.BadRequestError)
-	}
-
-	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
-	if ok == true {
-		t.Errorf("Unexpected user in context: got %v want %v", userCtx, nil)
+		userContext, ok := core.UserFromContext(req.Context())
+		if ok {
+			if want, got := *test.ExpectedContext, *userContext; want != got {
+				t.Errorf("'%v' failed. Unexpected request context, want %v got %v", test.Name, want, got)
+			}
+		} else {
+			if want, got := test.ExpectedContext, userContext; want != got {
+				t.Errorf("'%v' failed. Unexpected request context, want %v got %v", test.Name, want, got)
+			}
+		}
 	}
 }
 
-// Should attach user to request context and pass through to handler
-func TestValidSessionUserContext(t *testing.T) {
-	user := &core.SessionUser{
-		Admin: true,
-		User: core.User{
-			Id:        "id",
-			Name:      "lolname",
-			Email:     "lol@email",
-			ImageUrl:  "img",
+func TestAuthMiddleware(t *testing.T) {
+	sessionUser := core.SessionUser{
+		Role: core.Role{
+			Id:        uuid.Must(uuid.NewRandom()),
+			Name:      "Admin",
 			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			DeletedAt: time.Time{},
+		},
+		User: core.User{
+			Id:            uuid.Must(uuid.NewRandom()).String(),
+			Name:          "User User",
+			Email:         "user@email.com",
+			EmailVerified: true,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 		},
 	}
-
-	rr, req := setupAuthMiddlewareTest(amTestConfig{
-		SessionCookie: "coookie",
-		VerifySessionOutput: mock.MockVerifySessionOutput{
-			Value: user,
-			Error: nil,
+	runAuthMiddlewareSuite(t, authMiddlewareSuite{
+		Tests: []authMiddlewareTest{
+			{
+				Name: "Should attach session user to context if has valid session cookie",
+				MockSessionServiceValues: mock.MockSessionServiceValues{
+					VerifySession: mock.MockResponse{
+						Value: sessionUser,
+						Error: nil,
+					},
+				},
+				RequestCookies: []nethttp.Cookie{
+					{
+						Name:   "session",
+						Value:  "session-cookie",
+						MaxAge: 10,
+					},
+				},
+				ExpectedStatusCode: 200,
+				ExpectedContext:    &sessionUser,
+				ExpectedCookies: []nethttp.Cookie{
+					{
+						Name:   "session",
+						Value:  "session-cookie",
+						MaxAge: 10,
+					},
+				},
+			},
+			{
+				Name: "Should not attach a user when not signed in",
+				MockSessionServiceValues: mock.MockSessionServiceValues{
+					VerifySession: mock.MockResponse{
+						Value: core.SessionUser{},
+						Error: nil,
+					},
+				},
+				RequestCookies:     []nethttp.Cookie{},
+				ExpectedCookies:    []nethttp.Cookie{},
+				ExpectedStatusCode: 200,
+				ExpectedContext:    nil,
+			},
+			{
+				Name: "Should respond with an error and remove the cookie if the session cookie is invalid",
+				MockSessionServiceValues: mock.MockSessionServiceValues{
+					VerifySession: mock.MockResponse{
+						Value: core.SessionUser{},
+						Error: core.NewError(core.BadRequestError, "Invalid session"),
+					},
+				},
+				RequestCookies: []nethttp.Cookie{
+					{
+						Name:   "session",
+						Value:  "session-cookie",
+						MaxAge: 10,
+					},
+				},
+				ExpectedStatusCode: 400,
+				ExpectedContext:    nil,
+				ExpectedCookies: []nethttp.Cookie{
+					{
+						Name:   "session",
+						Value:  "",
+						MaxAge: -1,
+					},
+				},
+			},
 		},
 	})
-
-	userCtx, ok := req.Context().Value(core.UserContextKey).(*core.SessionUser)
-	if ok == false || userCtx != user {
-		t.Errorf("Unexpected user in context: got %v want %v", userCtx, user)
-	}
-
-	status := rr.Result().StatusCode
-	if status != nethttp.StatusOK {
-		t.Errorf("Unexpected status code: got %v want %v", status, nethttp.StatusOK)
-	}
 }
