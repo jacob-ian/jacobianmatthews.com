@@ -35,8 +35,8 @@ func (ss *SessionService) StartSession(ctx context.Context, idToken string) (Ses
 		return Session{}, NewError(BadRequestError, "Invalid ID Token")
 	}
 
-	if !authenticatedWithinTime(decodedToken, time.Minute*5) {
-		return Session{}, NewError(UnauthenticatedError, "Unauthenticated")
+	if err := checkRecentlyAuthenticated(decodedToken); err != nil {
+		return Session{}, err
 	}
 
 	if err = ss.registerIfNewUser(ctx, decodedToken.Subject); err != nil {
@@ -55,11 +55,18 @@ func (ss *SessionService) StartSession(ctx context.Context, idToken string) (Ses
 	}, nil
 }
 
-// Check that ID token was authenticated within a time duration
-func authenticatedWithinTime(token *Token, duration time.Duration) bool {
+// Check that ID token was authenticated within the last 5 minutes
+func checkRecentlyAuthenticated(token *Token) error {
 	now := time.Now().Unix()
-	timeOfAuth := token.Claims["auth_time"].(int64)
-	return now-timeOfAuth < int64(duration)
+	timeOfAuth, ok := token.Claims["auth_time"].(int64)
+	if !ok {
+		log.Printf("Invalid ID Token 'auth_time'")
+		return NewError(BadRequestError, "Invalid ID Token")
+	}
+	if now-timeOfAuth > int64(time.Minute*5) {
+		return NewError(UnauthenticatedError, "Unauthenticated")
+	}
+	return nil
 }
 
 // Checks if given user exists and creates one if they don't
@@ -75,7 +82,7 @@ func (ss *SessionService) registerIfNewUser(ctx context.Context, userId string) 
 
 	idpUser, err := ss.provider.GetUserDetails(ctx, userId)
 	if err != nil {
-		return NewError(InternalError, "Invalid Firebase User ID")
+		return NewError(BadRequestError, "Invalid Firebase User ID")
 	}
 
 	if _, err := ss.users.Create(ctx, NewUser{

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
 )
@@ -60,7 +61,7 @@ func TestSessionService_StartSession(t *testing.T) {
 						Value: &core.Token{
 							Subject: "user1",
 							Claims: map[string]any{
-								"auth_time": time.Now().Unix(),
+								"auth_time": time.Now().Unix() - int64(time.Minute),
 							}},
 						Error: nil,
 					},
@@ -137,7 +138,7 @@ func TestSessionService_StartSession(t *testing.T) {
 						Value: &core.Token{
 							Subject: "user1",
 							Claims: map[string]any{
-								"auth_time": time.Now().Add(-time.Minute * 6).Unix(),
+								"auth_time": time.Now().Unix() - int64(time.Minute*6),
 							}},
 						Error: nil,
 					},
@@ -168,6 +169,219 @@ func TestSessionService_StartSession(t *testing.T) {
 				},
 				ExpectedOutput: core.Session{},
 				ExpectedError:  core.NewError(core.UnauthenticatedError, "Unauthenticated"),
+			},
+			{
+				Name: "Should fail if user repository throws a non-NotFound error",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix() - int64(time.Minute),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.InternalError, "Something went wrong"),
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.InternalError, "Something went wrong"),
+			},
+			{
+				Name: "Should fail if user repository throws a NotFound error and provider user details throws an error",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix() - int64(time.Minute),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{},
+						Error: errors.New("Couldn't find user with that ID"),
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.NotFoundError, "Couldn't find user"),
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.BadRequestError, "Invalid Firebase User ID"),
+			},
+			{
+				Name: "Should fail if user repository throws an error on Create",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix() - int64(time.Minute),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{
+							Id:            uuid.Must(uuid.NewRandom()).String(),
+							DisplayName:   "Namey Name",
+							Email:         "email@email.com",
+							EmailVerified: false,
+							ImageUrl:      "",
+						},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.NotFoundError, "Couldn't find user"),
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.InternalError, "Couldn't create user"),
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.InternalError, "Couldn't create user"),
+			},
+			{
+				Name: "Should fail if auth service can't give new user a role",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix() - int64(time.Minute),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "session-cookie",
+						Error: nil,
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{
+							Id:            uuid.Must(uuid.NewRandom()).String(),
+							DisplayName:   "Namey Name",
+							Email:         "email@email.com",
+							EmailVerified: false,
+							ImageUrl:      "",
+						},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.NotFoundError, "Couldn't find user"),
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: core.NewError(core.InternalError, "Couldn't give user role"),
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.InternalError, "Couldn't give user role"),
+			},
+			{
+				Name: "Should fail if provider fails to create a session cookie",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifyIdToken: mock.MockResponse{
+						Value: &core.Token{
+							Subject: "user1",
+							Claims: map[string]any{
+								"auth_time": time.Now().Unix() - int64(time.Minute),
+							}},
+						Error: nil,
+					},
+					CreateSessionCookie: mock.MockResponse{
+						Value: "",
+						Error: errors.New("Couldn't create session cookie"),
+					},
+					GetUserDetails: mock.MockResponse{
+						Value: core.AuthProviderUser{
+							Id:            uuid.Must(uuid.NewRandom()).String(),
+							DisplayName:   "Namey Name",
+							Email:         "email@email.com",
+							EmailVerified: false,
+							ImageUrl:      "",
+						},
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.NotFoundError, "Couldn't find user"),
+					},
+					Create: mock.MockResponse{
+						Value: core.User{},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GiveUserRoleByName: mock.MockResponse{
+						Value: core.Role{},
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.Session{},
+				ExpectedError:  core.NewError(core.InternalError, "An error occurred whilst signing in"),
 			},
 		},
 	})
