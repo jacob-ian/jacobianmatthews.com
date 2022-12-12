@@ -103,26 +103,25 @@ func (ss *SessionService) registerIfNewUser(ctx context.Context, userId string) 
 }
 
 // Verify a session cookie and get the details of the request user
-func (ss *SessionService) VerifySession(ctx context.Context, sessionCookie string) (*SessionUser, error) {
+func (ss *SessionService) VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error) {
 	decodedToken, err := ss.provider.VerifySessionCookie(ctx, sessionCookie)
 	if err != nil {
-		return nil, NewError(UnauthenticatedError, "Invalid session")
+		return SessionUser{}, NewError(UnauthenticatedError, "Invalid session")
 	}
 
 	userId := decodedToken.Subject
 
 	user, err := ss.users.FindById(ctx, userId)
 	if err != nil {
-		return nil, NewError(InternalError, "An error occurred")
+		return SessionUser{}, NewError(InternalError, "Could not get signed in user")
 	}
 
 	role, err := ss.authService.GetOrGiveUserRole(ctx, user.Id, "User")
 	if err != nil {
-		log.Printf("ERROR: FIREBASEAUTH-VERIFY - %v", err.Error())
-		return nil, NewError(InternalError, "Could not verify session")
+		return SessionUser{}, NewError(InternalError, "Could not verify session")
 	}
 
-	return &SessionUser{
+	return SessionUser{
 		Role: role,
 		User: user,
 	}, nil

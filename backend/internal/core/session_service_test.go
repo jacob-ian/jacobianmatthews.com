@@ -386,3 +386,129 @@ func TestSessionService_StartSession(t *testing.T) {
 		},
 	})
 }
+
+func TestSessionService_VerifySession(t *testing.T) {
+	role := core.Role{
+		Id:        uuid.Must(uuid.NewRandom()),
+		Name:      "Admin",
+		CreatedAt: time.Now().Add(-time.Hour * 120),
+	}
+	user := core.User{
+		Id:            uuid.Must(uuid.NewRandom()).String(),
+		Name:          "Usery User",
+		Email:         "emaily@email.com",
+		EmailVerified: true,
+		CreatedAt:     time.Now().Add(-time.Hour * 72),
+		UpdatedAt:     time.Now().Add(-time.Hour * 72),
+	}
+
+	runSessionServiceSuite(t, sessionServiceSuite{
+		Func: func(service *core.SessionService) (any, error) {
+			return service.VerifySession(context.Background(), "session-cookie")
+		},
+		Tests: []sessionServiceTest{
+			{
+				Name: "Should return the user's role and user details",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifySessionCookie: mock.MockResponse{
+						Value: &core.Token{
+							Subject: user.Id,
+						},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GetOrGiveUserRole: mock.MockResponse{
+						Value: role,
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: user,
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.SessionUser{
+					User: user,
+					Role: role,
+				},
+				ExpectedError: nil,
+			},
+			{
+				Name: "Should throw an error if the session cookie is invalid",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifySessionCookie: mock.MockResponse{
+						Value: &core.Token{},
+						Error: errors.New("Invalid sessoin cookie dude"),
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GetOrGiveUserRole: mock.MockResponse{
+						Value: role,
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: user,
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.SessionUser{},
+				ExpectedError:  core.NewError(core.UnauthenticatedError, "Invalid session"),
+			},
+			{
+				Name: "Should throw an error if the user respository lookup fails",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifySessionCookie: mock.MockResponse{
+						Value: &core.Token{
+							Subject: user.Id,
+						},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GetOrGiveUserRole: mock.MockResponse{
+						Value: role,
+						Error: nil,
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: core.User{},
+						Error: core.NewError(core.NotFoundError, "Could not find user"),
+					},
+				},
+				ExpectedOutput: core.SessionUser{},
+				ExpectedError:  core.NewError(core.InternalError, "Could not get signed in user"),
+			},
+			{
+				Name: "Should throw an error if the auth service role lookup fails",
+				AuthProviderValues: mock.MockAuthProviderValues{
+					VerifySessionCookie: mock.MockResponse{
+						Value: &core.Token{
+							Subject: user.Id,
+						},
+						Error: nil,
+					},
+				},
+				AuthServiceValues: mock.MockAuthServiceValues{
+					GetOrGiveUserRole: mock.MockResponse{
+						Value: core.Role{},
+						Error: core.NewError(core.NotFoundError, "Could not find user role"),
+					},
+				},
+				UserRespositoryValues: mock.MockUserRepositoryValues{
+					FindById: mock.MockResponse{
+						Value: user,
+						Error: nil,
+					},
+				},
+				ExpectedOutput: core.SessionUser{},
+				ExpectedError:  core.NewError(core.InternalError, "Could not verify session"),
+			},
+		},
+	})
+
+}
