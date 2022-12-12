@@ -1,4 +1,4 @@
-package http
+package res
 
 import (
 	"encoding/json"

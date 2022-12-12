@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/auth"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 	"log"
 	"net/http"
@@ -28,8 +29,12 @@ func (a *Application) Serve() error {
 	return a.server.ListenAndServe()
 }
 
-func (a *Application) connectControllers(ctx context.Context) {
-	a.connectAuthControllers(ctx, "/api/auth")
+func (a *Application) connectControllers() {
+	auth.ConnectAuthControllers(auth.AuthControllersConfig{
+		BaseRoute:      "/api/auth",
+		Router:         a.router,
+		SessionService: a.sessionService,
+	})
 }
 
 func (a *Application) Shutdown(ctx context.Context) error {
@@ -69,7 +74,7 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		server:         &srv,
 		router:         mux,
 	}
-	app.connectControllers(ctx)
+	app.connectControllers()
 
 	return app, nil
 }
