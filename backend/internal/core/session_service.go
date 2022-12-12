@@ -16,20 +16,27 @@ type SessionUser struct {
 	Role Role `json:"role"`
 }
 
-type SessionService struct {
+type SessionService interface {
+	// Starts a user session given an ID Token (registers the user if new)
+	StartSession(ctx context.Context, idToken string) (Session, error)
+	// Verifies a session cookie and returns the session user
+	VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error)
+}
+
+type CoreSessionService struct {
 	provider    AuthProvider
 	users       UserRepository
 	authService AuthService
 }
 
-type SessionServiceConfig struct {
+type CoreSessionServiceConfig struct {
 	AuthProvider   AuthProvider
 	UserRepository UserRepository
 	AuthService    AuthService
 }
 
 // Starts a session given an IDToken
-func (ss *SessionService) StartSession(ctx context.Context, idToken string) (Session, error) {
+func (ss *CoreSessionService) StartSession(ctx context.Context, idToken string) (Session, error) {
 	decodedToken, err := ss.provider.VerifyIdToken(ctx, idToken)
 	if err != nil {
 		return Session{}, NewError(BadRequestError, "Invalid ID Token")
@@ -70,7 +77,7 @@ func checkRecentlyAuthenticated(token *Token) error {
 }
 
 // Checks if given user exists and creates one if they don't
-func (ss *SessionService) registerIfNewUser(ctx context.Context, userId string) error {
+func (ss *CoreSessionService) registerIfNewUser(ctx context.Context, userId string) error {
 	_, err := ss.users.FindById(ctx, userId)
 	if err == nil {
 		return nil
@@ -103,7 +110,7 @@ func (ss *SessionService) registerIfNewUser(ctx context.Context, userId string) 
 }
 
 // Verify a session cookie and get the details of the request user
-func (ss *SessionService) VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error) {
+func (ss *CoreSessionService) VerifySession(ctx context.Context, sessionCookie string) (SessionUser, error) {
 	decodedToken, err := ss.provider.VerifySessionCookie(ctx, sessionCookie)
 	if err != nil {
 		return SessionUser{}, NewError(UnauthenticatedError, "Invalid session")
@@ -128,8 +135,8 @@ func (ss *SessionService) VerifySession(ctx context.Context, sessionCookie strin
 }
 
 // Create a new Session Service given an Auth Provider (e.g. Firebase Auth)
-func NewSessionService(config SessionServiceConfig) *SessionService {
-	return &SessionService{
+func NewSessionService(config CoreSessionServiceConfig) *CoreSessionService {
+	return &CoreSessionService{
 		provider:    config.AuthProvider,
 		users:       config.UserRepository,
 		authService: config.AuthService,

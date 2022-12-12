@@ -5,12 +5,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
 func TestAttachUserContext(t *testing.T) {
 	user := &core.SessionUser{
-		Admin: true,
+		Role: core.Role{
+			Id:        uuid.Must(uuid.NewRandom()),
+			Name:      "Admin",
+			CreatedAt: time.Now(),
+		},
 		User: core.User{
 			Id:        "id",
 			Name:      "lolname",
@@ -18,7 +23,6 @@ func TestAttachUserContext(t *testing.T) {
 			ImageUrl:  "img",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			DeletedAt: time.Time{},
 		},
 	}
 
@@ -33,7 +37,11 @@ func TestAttachUserContext(t *testing.T) {
 
 func TestUserFromContextExists(t *testing.T) {
 	user := &core.SessionUser{
-		Admin: true,
+		Role: core.Role{
+			Id:        uuid.Must(uuid.NewRandom()),
+			Name:      "Admin",
+			CreatedAt: time.Now(),
+		},
 		User: core.User{
 			Id:        "id",
 			Name:      "lolname",
@@ -41,7 +49,6 @@ func TestUserFromContextExists(t *testing.T) {
 			ImageUrl:  "img",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			DeletedAt: time.Time{},
 		},
 	}
 

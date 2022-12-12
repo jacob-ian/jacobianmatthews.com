@@ -20,7 +20,7 @@ type Application struct {
 	router         *http.ServeMux
 	server         *http.Server
 	database       *postgres.Database
-	sessionService *core.SessionService
+	sessionService core.SessionService
 }
 
 func (a *Application) Serve() error {
@@ -45,7 +45,7 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		UserRoleRepository: db.UserRoleRepository,
 		RoleRepository:     db.RoleRepository,
 	})
-	sessionService := core.NewSessionService(core.SessionServiceConfig{
+	sessionService := core.NewSessionService(core.CoreSessionServiceConfig{
 		AuthService:    authService,
 		AuthProvider:   config.AuthProvider,
 		UserRepository: db.UserRepository,
