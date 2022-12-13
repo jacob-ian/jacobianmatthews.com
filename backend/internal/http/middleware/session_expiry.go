@@ -1,15 +1,15 @@
-package http
+package middleware
 
 import (
 	"net/http"
 	"time"
 )
 
-type AuthAfterware struct {
+type SessionExpiryMiddleware struct {
 }
 
 // Update the expiry of the session cookie if it exists
-func (a AuthAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
+func (a SessionExpiryMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		return nil
@@ -32,7 +32,7 @@ func (a AuthAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Creates auth afterware to update session expiry
-func NewAuthAfterware() AuthAfterware {
-	return AuthAfterware{}
+// Creates middleware that extends session expiry by another 15 minutes
+func NewSessionExpiryMiddleware() *SessionExpiryMiddleware {
+	return &SessionExpiryMiddleware{}
 }

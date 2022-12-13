@@ -8,18 +8,18 @@ import (
 )
 
 // Return the details for the currently signed in user
-func UserInfoHandler() http.HandlerFunc {
+func UserInfoHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			res.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
+			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		user, ok := core.UserFromContext(r.Context())
 		if !ok {
-			res.NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
+			W.NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return
 		}
-		res.NewResponseWriter(w, r).Write(http.StatusOK, user)
+		W.NewResponseWriter(w, r).Write(http.StatusOK, user)
 	}
 }

@@ -19,28 +19,28 @@ type logInResponse struct {
 }
 
 // Attempt to sign the user into the website
-func LoginHandler(sessionService core.SessionService) http.HandlerFunc {
+func LoginHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			res.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
+			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		payload := logInPayload{}
 		err := json.NewJsonDecoder(r.Body).Decode(&payload)
 		if err != nil {
-			res.NewResponseWriter(w, r).HandleError(err)
+			W.NewResponseWriter(w, r).HandleError(err)
 			return
 		}
 
 		csrfCookie, err := r.Cookie("csrfToken")
 		if err != nil || csrfCookie.Value != payload.CsrfToken {
-			res.NewResponseWriter(w, r).WriteError("Invalid CSRF", http.StatusBadRequest)
+			W.NewResponseWriter(w, r).WriteError("Invalid CSRF", http.StatusBadRequest)
 			return
 		}
 
 		session, err := sessionService.StartSession(r.Context(), payload.IdToken)
 		if err != nil {
-			res.NewResponseWriter(w, r).HandleError(err)
+			W.NewResponseWriter(w, r).HandleError(err)
 			return
 		}
 
@@ -53,7 +53,7 @@ func LoginHandler(sessionService core.SessionService) http.HandlerFunc {
 			Secure:   true,
 		})
 
-		res.NewResponseWriter(w, r).Write(http.StatusCreated, logInResponse{
+		W.NewResponseWriter(w, r).Write(http.StatusCreated, logInResponse{
 			Message:   "Signed in",
 			ExpiresIn: int(session.ExpiresIn.Seconds()),
 		})

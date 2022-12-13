@@ -12,16 +12,16 @@ type logOutResponse struct {
 }
 
 // Revokes the user's session (signs the user out)
-func LogoutHandler(sessionService core.SessionService) http.HandlerFunc {
+func LogoutHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			res.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
+			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		_, ok := core.UserFromContext(r.Context())
 		if !ok {
-			res.NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
+			W.NewResponseWriter(w, r).WriteError("Not signed in", http.StatusUnauthorized)
 			return
 		}
 
@@ -31,7 +31,7 @@ func LogoutHandler(sessionService core.SessionService) http.HandlerFunc {
 			MaxAge: 0,
 		})
 
-		res.NewResponseWriter(w, r).Write(http.StatusOK, logOutResponse{
+		W.NewResponseWriter(w, r).Write(http.StatusOK, logOutResponse{
 			Message: "Successfully signed out",
 		})
 	}

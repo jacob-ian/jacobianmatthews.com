@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"crypto/rand"
@@ -8,10 +8,10 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
-type CsrfAfterware struct {
+type CsrfMiddleware struct {
 }
 
-func (m *CsrfAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
+func (m *CsrfMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	token := make([]byte, 16)
 	_, err := rand.Read(token)
 	if err != nil {
@@ -21,10 +21,12 @@ func (m *CsrfAfterware) ServeHTTP(w http.ResponseWriter, r *http.Request) error 
 		Name:     "csrfToken",
 		Value:    fmt.Sprintf("%x", token),
 		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
 	})
 	return nil
 }
 
-func NewCsrfAfterware() *CsrfAfterware {
-	return &CsrfAfterware{}
+// Creates middleware that sets a CSRF token cookie to each response
+func NewCsrfMiddleware() *CsrfMiddleware {
+	return &CsrfMiddleware{}
 }

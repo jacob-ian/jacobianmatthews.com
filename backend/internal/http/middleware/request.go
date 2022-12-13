@@ -1,10 +1,11 @@
-package http
+package middleware
 
 import (
 	"net/http"
 	"strings"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 )
 
 type Header struct {
@@ -12,29 +13,28 @@ type Header struct {
 	Value string
 }
 
-type GlobalMiddlewareConfig struct {
+type RequestMiddlewareConfig struct {
 	CorsOrigin      string
 	Accept          string
 	RequiredHeaders []Header
 	ResponseHeaders []Header
 }
 
-type GlobalMiddleware struct {
+type RequestMiddleware struct {
 	handler http.Handler
-	config  GlobalMiddlewareConfig
+	config  RequestMiddlewareConfig
 }
 
-func (m *GlobalMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (m *RequestMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.writeResponseHeaders(w)
-	e := m.checkRequestHeaders(r)
-	if e != nil {
-		NewResponseWriter(w, r).HandleError(e)
+	if e := m.checkRequestHeaders(r); e != nil {
+		res.NewResponseWriter(w, r).HandleError(e)
 		return
 	}
 	m.handler.ServeHTTP(w, r)
 }
 
-func (m *GlobalMiddleware) writeResponseHeaders(w http.ResponseWriter) {
+func (m *RequestMiddleware) writeResponseHeaders(w http.ResponseWriter) {
 	responseHeaders := append(
 		m.config.ResponseHeaders,
 		Header{Name: "Accept", Value: m.config.Accept},
@@ -45,7 +45,7 @@ func (m *GlobalMiddleware) writeResponseHeaders(w http.ResponseWriter) {
 	}
 }
 
-func (m *GlobalMiddleware) checkRequestHeaders(r *http.Request) error {
+func (m *RequestMiddleware) checkRequestHeaders(r *http.Request) error {
 	err := checkContentType(r, m.config.Accept)
 	if err != nil {
 		return err
@@ -81,8 +81,8 @@ func checkContentType(r *http.Request, accepted string) error {
 }
 
 // Create middleware that defines required request headers and the global response headers
-func NewGlobalMiddleware(handler http.Handler, config GlobalMiddlewareConfig) *GlobalMiddleware {
-	return &GlobalMiddleware{
+func NewRequestMiddleware(handler http.Handler, config RequestMiddlewareConfig) *RequestMiddleware {
+	return &RequestMiddleware{
 		handler: handler,
 		config:  config,
 	}

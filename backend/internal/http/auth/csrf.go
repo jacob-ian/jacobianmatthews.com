@@ -11,15 +11,15 @@ type csrfResponse struct {
 }
 
 // Ensures that a CSRF Token is present in the browser
-func CSRFTokenHandler() http.HandlerFunc {
+func CSRFTokenHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			res.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
+			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		// We don't need to do anything, the CSRF middleware will set the cookie
-		res.NewResponseWriter(w, r).Write(http.StatusOK, csrfResponse{
+		W.NewResponseWriter(w, r).Write(http.StatusOK, csrfResponse{
 			Message: "OK",
 		})
 	}

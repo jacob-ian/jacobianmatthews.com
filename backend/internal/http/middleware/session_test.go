@@ -1,4 +1,4 @@
-package http_test
+package middleware_test
 
 import (
 	nethttp "net/http"

@@ -1,17 +1,18 @@
-package http
+package middleware
 
 import (
 	"net/http"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 )
 
-type AuthMiddleware struct {
+type SessionMiddleware struct {
 	handler  http.Handler
 	sessions core.SessionService
 }
 
-func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (m *SessionMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		m.handler.ServeHTTP(w, r)
@@ -25,7 +26,7 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Value:  "",
 			MaxAge: -1,
 		})
-		NewResponseWriter(w, r).HandleError(err)
+		res.NewResponseWriter(w, r).HandleError(err)
 		return
 	}
 
@@ -33,9 +34,9 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// Creates the authentication middleware
-func NewAuthMiddleware(h http.Handler, s core.SessionService) *AuthMiddleware {
-	return &AuthMiddleware{
+// Creates the session authentication middleware
+func NewSessionMiddleware(h http.Handler, s core.SessionService) *SessionMiddleware {
+	return &SessionMiddleware{
 		handler:  h,
 		sessions: s,
 	}

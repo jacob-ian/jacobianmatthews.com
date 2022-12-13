@@ -8,10 +8,6 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 )
 
-type Afterware interface {
-	ServeHTTP(w http.ResponseWriter, r *http.Request) error
-}
-
 type ResponseWriter struct {
 	writer    http.ResponseWriter
 	request   *http.Request
@@ -62,12 +58,4 @@ func GetStatusError(code int) string {
 	lowercase := strings.ToLower(text)
 	underscore := strings.ReplaceAll(lowercase, " ", "_")
 	return underscore
-}
-
-func NewResponseWriter(w http.ResponseWriter, r *http.Request) *ResponseWriter {
-	return &ResponseWriter{
-		writer:    w,
-		request:   r,
-		afterware: []Afterware{NewCsrfAfterware(), NewAuthAfterware()},
-	}
 }

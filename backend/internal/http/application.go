@@ -2,12 +2,15 @@ package http
 
 import (
 	"context"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/auth"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/auth"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/middleware"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
 )
 
 type Config struct {
@@ -19,6 +22,7 @@ type Config struct {
 
 type Application struct {
 	router         *http.ServeMux
+	res            *res.ResponseWriterFactory
 	server         *http.Server
 	database       *postgres.Database
 	sessionService core.SessionService
@@ -30,9 +34,10 @@ func (a *Application) Serve() error {
 }
 
 func (a *Application) connectControllers() {
-	auth.ConnectAuthControllers(auth.AuthControllersConfig{
+	auth.ConnectControllers(auth.AuthControllersConfig{
 		BaseRoute:      "/api/auth",
 		Router:         a.router,
+		Res:            a.res,
 		SessionService: a.sessionService,
 	})
 }
@@ -57,11 +62,18 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 	})
 
 	mux := http.NewServeMux()
-	handler := NewGlobalMiddleware(mux, GlobalMiddlewareConfig{
+	handler := middleware.NewRequestMiddleware(mux, middleware.RequestMiddlewareConfig{
 		CorsOrigin: "localhost:3001",
 		Accept:     "application/json, application/grpc-web",
 	})
-	withAuth := NewAuthMiddleware(handler, sessionService)
+	withAuth := middleware.NewSessionMiddleware(handler, sessionService)
+
+	res := res.NewResponseWriterFactory(res.ResponseWriterConfig{
+		Afterware: []res.Afterware{
+			middleware.NewCsrfMiddleware(),
+			middleware.NewSessionExpiryMiddleware(),
+		},
+	})
 
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),
@@ -73,7 +85,9 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		sessionService: sessionService,
 		server:         &srv,
 		router:         mux,
+		res:            res,
 	}
+
 	app.connectControllers()
 
 	return app, nil
