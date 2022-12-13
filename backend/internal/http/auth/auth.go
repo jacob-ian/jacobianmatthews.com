@@ -13,8 +13,9 @@ type AuthControllersConfig struct {
 }
 
 // Connects the authentication controllers
-func ConnectAuthControllers(config AuthControllersConfig) {
+func ConnectControllers(config AuthControllersConfig) {
 	config.Router.Handle(config.BaseRoute+"/login", LoginHandler(config.SessionService))
 	config.Router.Handle(config.BaseRoute+"/logout", LogoutHandler(config.SessionService))
 	config.Router.Handle(config.BaseRoute+"/me", UserInfoHandler())
+	config.Router.Handle(config.BaseRoute+"/csrf", CSRFTokenHandler())
 }

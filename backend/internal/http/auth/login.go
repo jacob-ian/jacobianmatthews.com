@@ -25,8 +25,8 @@ func LoginHandler(sessionService core.SessionService) http.HandlerFunc {
 			res.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		payload := &logInPayload{}
-		err := json.NewJsonDecoder(r.Body).Decode(payload)
+		payload := logInPayload{}
+		err := json.NewJsonDecoder(r.Body).Decode(&payload)
 		if err != nil {
 			res.NewResponseWriter(w, r).HandleError(err)
 			return
