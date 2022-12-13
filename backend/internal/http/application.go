@@ -61,19 +61,19 @@ func NewApplication(ctx context.Context, config Config) (*Application, error) {
 		UserRepository: db.UserRepository,
 	})
 
-	mux := http.NewServeMux()
-	handler := middleware.NewRequestMiddleware(mux, middleware.RequestMiddlewareConfig{
-		CorsOrigin: "localhost:3001",
-		Accept:     "application/json, application/grpc-web",
-	})
-	withAuth := middleware.NewSessionMiddleware(handler, sessionService)
-
 	res := res.NewResponseWriterFactory(res.ResponseWriterConfig{
 		Afterware: []res.Afterware{
 			middleware.NewCsrfMiddleware(),
 			middleware.NewSessionExpiryMiddleware(),
 		},
 	})
+
+	mux := http.NewServeMux()
+	handler := middleware.NewRequestMiddleware(mux, middleware.RequestMiddlewareConfig{
+		CorsOrigin: "localhost:3001",
+		Accept:     "application/json, application/grpc-web",
+	})
+	withAuth := middleware.NewSessionMiddleware(handler, sessionService)
 
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),

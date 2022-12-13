@@ -7,37 +7,45 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 )
 
+type SessionMiddlewareConfig struct {
+	Router         http.Handler
+	Res            *res.ResponseWriterFactory
+	SessionService core.SessionService
+}
+
 type SessionMiddleware struct {
-	handler  http.Handler
-	sessions core.SessionService
+	router  http.Handler
+	service core.SessionService
+	res     *res.ResponseWriterFactory
 }
 
 func (m *SessionMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		m.handler.ServeHTTP(w, r)
+		m.router.ServeHTTP(w, r)
 		return
 	}
 
-	user, err := m.sessions.VerifySession(r.Context(), cookie.Value)
+	user, err := m.service.VerifySession(r.Context(), cookie.Value)
 	if err != nil {
 		http.SetCookie(w, &http.Cookie{
 			Name:   "session",
 			Value:  "",
 			MaxAge: -1,
 		})
-		res.NewResponseWriter(w, r).HandleError(err)
+		m.res.NewResponseWriter(w, r).HandleError(err)
 		return
 	}
 
 	ctx := core.WithUserContext(r.Context(), &user)
-	m.handler.ServeHTTP(w, r.WithContext(ctx))
+	m.router.ServeHTTP(w, r.WithContext(ctx))
 }
 
 // Creates the session authentication middleware
-func NewSessionMiddleware(h http.Handler, s core.SessionService) *SessionMiddleware {
+func NewSessionMiddleware(config SessionMiddlewareConfig) *SessionMiddleware {
 	return &SessionMiddleware{
-		handler:  h,
-		sessions: s,
+		router:  config.Router,
+		service: config.SessionService,
+		res:     config.Res,
 	}
 }

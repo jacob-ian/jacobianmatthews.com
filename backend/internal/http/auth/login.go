@@ -26,8 +26,7 @@ func LoginHandler(W *res.ResponseWriterFactory, sessionService core.SessionServi
 			return
 		}
 		payload := logInPayload{}
-		err := json.NewJsonDecoder(r.Body).Decode(&payload)
-		if err != nil {
+		if err := json.NewJsonDecoder(r.Body).Decode(&payload); err != nil {
 			W.NewResponseWriter(w, r).HandleError(err)
 			return
 		}
