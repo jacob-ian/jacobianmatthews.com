@@ -22,13 +22,14 @@ type RequestMiddlewareConfig struct {
 
 type RequestMiddleware struct {
 	handler http.Handler
+	res     *res.ResponseWriterFactory
 	config  RequestMiddlewareConfig
 }
 
 func (m *RequestMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.writeResponseHeaders(w)
 	if e := m.checkRequestHeaders(r); e != nil {
-		res.NewResponseWriter(w, r).HandleError(e)
+		m.res.NewResponseWriter(w, r).HandleError(e)
 		return
 	}
 	m.handler.ServeHTTP(w, r)
@@ -80,10 +81,15 @@ func checkContentType(r *http.Request, accepted string) error {
 	return core.NewError(http.StatusNotAcceptable, "Not Acceptable")
 }
 
+func (rm *RequestMiddleware) Inject(handler http.Handler, writer *res.ResponseWriterFactory) http.Handler {
+	rm.handler = handler
+	rm.res = writer
+	return rm
+}
+
 // Create middleware that defines required request headers and the global response headers
-func NewRequestMiddleware(handler http.Handler, config RequestMiddlewareConfig) *RequestMiddleware {
+func NewRequestMiddleware(config RequestMiddlewareConfig) *RequestMiddleware {
 	return &RequestMiddleware{
-		handler: handler,
-		config:  config,
+		config: config,
 	}
 }

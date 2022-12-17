@@ -8,8 +8,6 @@ import (
 )
 
 type SessionMiddlewareConfig struct {
-	Router         http.Handler
-	Res            *res.ResponseWriterFactory
 	SessionService core.SessionService
 }
 
@@ -41,11 +39,15 @@ func (m *SessionMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.router.ServeHTTP(w, r.WithContext(ctx))
 }
 
+func (m *SessionMiddleware) Inject(handler http.Handler, writer *res.ResponseWriterFactory) http.Handler {
+	m.router = handler
+	m.res = writer
+	return m
+}
+
 // Creates the session authentication middleware
 func NewSessionMiddleware(config SessionMiddlewareConfig) *SessionMiddleware {
 	return &SessionMiddleware{
-		router:  config.Router,
 		service: config.SessionService,
-		res:     config.Res,
 	}
 }

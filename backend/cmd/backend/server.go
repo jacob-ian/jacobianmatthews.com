@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/firebaseauth"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/postgres"
@@ -35,14 +36,28 @@ func main() {
 		log.Fatalf("Could not create auth provider: %v", err.Error())
 	}
 
-	app, err := http.NewApplication(ctx, http.Config{
-		Port:         getPort(),
-		Database:     db,
-		AuthProvider: firebaseAuthProvider,
+	authService := core.NewAuthService(core.CoreAuthServiceConfig{
+		UserRepository:     db.UserRepository,
+		UserRoleRepository: db.UserRoleRepository,
+		RoleRepository:     db.RoleRepository,
 	})
-	if err != nil {
-		log.Fatalf("Could not create HTTP Application: %v", err.Error())
-	}
+
+	app := http.NewApplication(ctx, http.Config{
+		Port: getPort(),
+		Services: http.Services{
+			AuthService: authService,
+			SessionService: core.NewSessionService(core.CoreSessionServiceConfig{
+				UserRepository: db.UserRepository,
+				AuthProvider:   firebaseAuthProvider,
+				AuthService:    authService,
+			}),
+		},
+		Repositories: http.Repositories{
+			UserRepository:     db.UserRepository,
+			UserRoleRepository: db.UserRoleRepository,
+			RoleRepository:     db.RoleRepository,
+		},
+	})
 
 	log.Fatal(app.Serve())
 	defer app.Shutdown(ctx)
