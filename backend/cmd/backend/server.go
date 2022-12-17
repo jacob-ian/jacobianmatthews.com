@@ -42,7 +42,7 @@ func main() {
 		RoleRepository:     db.RoleRepository,
 	})
 
-	app := http.NewApplication(ctx, http.Config{
+	app := http.NewApplication(http.Config{
 		Port: getPort(),
 		Services: http.Services{
 			AuthService: authService,

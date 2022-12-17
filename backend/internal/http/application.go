@@ -70,7 +70,7 @@ func (a *Application) Shutdown(ctx context.Context) error {
 }
 
 // Creates a new HTTP Applicaton
-func NewApplication(ctx context.Context, config Config) *Application {
+func NewApplication(config Config) *Application {
 	mux := http.NewServeMux()
 	srv := http.Server{
 		Addr:    config.Host + ":" + strconv.FormatUint(uint64(config.Port), 10),
