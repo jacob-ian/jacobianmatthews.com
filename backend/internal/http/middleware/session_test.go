@@ -1,7 +1,7 @@
 package middleware_test
 
 import (
-	nethttp "net/http"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -16,11 +16,11 @@ import (
 type authMiddlewareTest struct {
 	Name                     string
 	MockSessionServiceValues mock.MockSessionServiceValues
-	RequestCookies           []nethttp.Cookie
+	RequestCookies           []http.Cookie
 	ExpectedStatusCode       int
 	ExpectedContext          *core.SessionUser
-	ExpectedCookies          []nethttp.Cookie
-	ExpectedSetCookies       []nethttp.Cookie
+	ExpectedCookies          []http.Cookie
+	ExpectedSetCookies       []http.Cookie
 }
 
 type authMiddlewareSuite struct {
@@ -32,8 +32,8 @@ func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
 		test := suite.Tests[i]
 
 		rr := httptest.NewRecorder()
-		req := httptest.NewRequest(nethttp.MethodGet, "/", nil)
-		h := nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			req = r
 			w.WriteHeader(200)
 			w.Write([]byte("hello"))
@@ -73,7 +73,7 @@ func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
 		setCookies := result.Cookies()
 		for k := range test.ExpectedSetCookies {
 			expected := test.ExpectedSetCookies[k]
-			var actual nethttp.Cookie
+			var actual http.Cookie
 			for j := range setCookies {
 				if cookie := setCookies[j]; cookie.Name == expected.Name {
 					actual = *cookie
@@ -119,7 +119,7 @@ func TestAuthMiddleware(t *testing.T) {
 						Error: nil,
 					},
 				},
-				RequestCookies: []nethttp.Cookie{
+				RequestCookies: []http.Cookie{
 					{
 						Name:   "session",
 						Value:  "session-cookie",
@@ -128,7 +128,7 @@ func TestAuthMiddleware(t *testing.T) {
 				},
 				ExpectedStatusCode: 200,
 				ExpectedContext:    &sessionUser,
-				ExpectedCookies: []nethttp.Cookie{
+				ExpectedCookies: []http.Cookie{
 					{
 						Name:   "session",
 						Value:  "session-cookie",
@@ -144,8 +144,8 @@ func TestAuthMiddleware(t *testing.T) {
 						Error: nil,
 					},
 				},
-				RequestCookies:     []nethttp.Cookie{},
-				ExpectedCookies:    []nethttp.Cookie{},
+				RequestCookies:     []http.Cookie{},
+				ExpectedCookies:    []http.Cookie{},
 				ExpectedStatusCode: 200,
 				ExpectedContext:    nil,
 			},
@@ -157,7 +157,7 @@ func TestAuthMiddleware(t *testing.T) {
 						Error: core.NewError(core.BadRequestError, "Invalid session"),
 					},
 				},
-				RequestCookies: []nethttp.Cookie{
+				RequestCookies: []http.Cookie{
 					{
 						Name:   "session",
 						Value:  "session-cookie",
@@ -166,14 +166,14 @@ func TestAuthMiddleware(t *testing.T) {
 				},
 				ExpectedStatusCode: 400,
 				ExpectedContext:    nil,
-				ExpectedCookies: []nethttp.Cookie{
+				ExpectedCookies: []http.Cookie{
 					{
 						Name:   "session",
 						Value:  "session-cookie",
 						MaxAge: 10,
 					},
 				},
-				ExpectedSetCookies: []nethttp.Cookie{
+				ExpectedSetCookies: []http.Cookie{
 					{
 						Name:   "session",
 						Value:  "",
