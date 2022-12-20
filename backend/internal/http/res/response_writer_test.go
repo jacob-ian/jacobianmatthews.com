@@ -24,7 +24,8 @@ func TestWriteJson(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	res.NewResponseWriter(rr, req).Write(nethttp.StatusCreated, response{
+	W := res.NewResponseWriterFactory(res.ResponseWriterConfig{})
+	W.NewResponseWriter(rr, req).Write(nethttp.StatusCreated, response{
 		Message: "Hello",
 		Time:    now,
 	})
@@ -53,7 +54,8 @@ func TestWriteError(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
 
-	res.NewResponseWriter(rr, req).WriteError("Test Error", nethttp.StatusMethodNotAllowed)
+	W := res.NewResponseWriterFactory(res.ResponseWriterConfig{})
+	W.NewResponseWriter(rr, req).WriteError("Test Error", nethttp.StatusMethodNotAllowed)
 
 	statusCode := rr.Result().StatusCode
 	if statusCode != nethttp.StatusMethodNotAllowed {
@@ -77,7 +79,8 @@ func TestHandleErrorCustomType(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	err := core.NewError(core.InternalError, "A test error")
 
-	res.NewResponseWriter(rr, req).HandleError(err)
+	W := res.NewResponseWriterFactory(res.ResponseWriterConfig{})
+	W.NewResponseWriter(rr, req).HandleError(err)
 
 	sc := rr.Result().StatusCode
 	if sc != core.InternalError {
@@ -101,7 +104,8 @@ func TestHandleErrorUnknownType(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	err := errors.New("Something went wrong")
 
-	res.NewResponseWriter(rr, req).HandleError(err)
+	W := res.NewResponseWriterFactory(res.ResponseWriterConfig{})
+	W.NewResponseWriter(rr, req).HandleError(err)
 
 	sc := rr.Result().StatusCode
 	if sc != nethttp.StatusInternalServerError {

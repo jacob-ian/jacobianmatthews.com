@@ -80,7 +80,6 @@ func NewApplication(config Config) *Application {
 	writer := res.NewResponseWriterFactory(res.ResponseWriterConfig{
 		Afterware: []res.Afterware{
 			middleware.NewCsrfMiddleware(),
-			middleware.NewSessionExpiryMiddleware(),
 		},
 	})
 

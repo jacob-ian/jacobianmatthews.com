@@ -21,7 +21,7 @@ type sessionServiceTest struct {
 }
 
 type sessionServiceSuite struct {
-	Func  func(service *core.SessionService) (any, error)
+	Func  func(service *core.CoreSessionService) (any, error)
 	Tests []sessionServiceTest
 }
 
@@ -30,7 +30,7 @@ func runSessionServiceSuite(t *testing.T, suite sessionServiceSuite) {
 	for i := range tests {
 		test := tests[i]
 
-		service := core.NewSessionService(core.SessionServiceConfig{
+		service := core.NewSessionService(core.CoreSessionServiceConfig{
 			AuthProvider:   mock.NewAuthProvider(test.AuthProviderValues),
 			UserRepository: mock.NewUserRepository(test.UserRespositoryValues),
 			AuthService:    mock.NewAuthService(test.AuthServiceValues),
@@ -50,7 +50,7 @@ func runSessionServiceSuite(t *testing.T, suite sessionServiceSuite) {
 
 func TestSessionService_StartSession(t *testing.T) {
 	runSessionServiceSuite(t, sessionServiceSuite{
-		Func: func(s *core.SessionService) (any, error) {
+		Func: func(s *core.CoreSessionService) (any, error) {
 			return s.StartSession(context.Background(), "idToken")
 		},
 		Tests: []sessionServiceTest{
@@ -403,7 +403,7 @@ func TestSessionService_VerifySession(t *testing.T) {
 	}
 
 	runSessionServiceSuite(t, sessionServiceSuite{
-		Func: func(service *core.SessionService) (any, error) {
+		Func: func(service *core.CoreSessionService) (any, error) {
 			return service.VerifySession(context.Background(), "session-cookie")
 		},
 		Tests: []sessionServiceTest{

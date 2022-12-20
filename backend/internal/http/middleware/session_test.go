@@ -8,7 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
-	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/middleware"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
 )
 
@@ -39,7 +40,11 @@ func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
 		})
 
 		a := mock.NewSessionService(test.MockSessionServiceValues)
-		m := http.NewAuthMiddleware(h, a)
+		m := middleware.NewSessionMiddleware(middleware.SessionMiddlewareConfig{
+			SessionService: a,
+		})
+
+		m.Inject(h, res.NewResponseWriterFactory(res.ResponseWriterConfig{}))
 
 		for j := range test.RequestCookies {
 			cookie := test.RequestCookies[j]

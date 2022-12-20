@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/middleware"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 )
 
 type header struct {
@@ -32,7 +33,8 @@ func setupGlobalMiddlewareTest(config requestMiddlewareTestConfig) *httptest.Res
 		w.WriteHeader(200)
 		w.Write([]byte{0, 1})
 	})
-	m := middleware.NewRequestMiddleware(h, config.Middleware)
+	m := middleware.NewRequestMiddleware(config.Middleware)
+	m.Inject(h, res.NewResponseWriterFactory(res.ResponseWriterConfig{}))
 	req := httptest.NewRequest(config.Request.Method, config.Request.URI, config.Request.Body)
 	for _, header := range config.Request.Headers {
 		req.Header.Set(header.Name, header.Value)

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
@@ -27,13 +28,27 @@ func (m *SessionMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, err := m.service.VerifySession(r.Context(), cookie.Value)
 	if err != nil {
 		http.SetCookie(w, &http.Cookie{
-			Name:   "session",
-			Value:  "",
-			MaxAge: -1,
+			Name:     "session",
+			SameSite: cookie.SameSite,
+			HttpOnly: cookie.HttpOnly,
+			Secure:   cookie.Secure,
+			Value:    "",
+			MaxAge:   -1,
 		})
 		m.res.NewResponseWriter(w, r).HandleError(err)
 		return
 	}
+
+	// Extend session expiry by 15 minutes
+	expiresIn := time.Minute * 15
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookie.Name,
+		Value:    cookie.Value,
+		MaxAge:   int(expiresIn.Seconds()),
+		SameSite: cookie.SameSite,
+		HttpOnly: cookie.HttpOnly,
+		Secure:   cookie.Secure,
+	})
 
 	ctx := core.WithUserContext(r.Context(), &user)
 	m.router.ServeHTTP(w, r.WithContext(ctx))

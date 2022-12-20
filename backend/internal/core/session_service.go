@@ -50,12 +50,13 @@ func (ss *CoreSessionService) StartSession(ctx context.Context, idToken string) 
 		return Session{}, err
 	}
 
-	sessionExpiresIn := time.Hour * 24 * 5
-	cookie, err := ss.provider.CreateSessionCookie(ctx, idToken, sessionExpiresIn)
+	cookieTokenExpiresIn := time.Hour * 24 * 5
+	cookie, err := ss.provider.CreateSessionCookie(ctx, idToken, cookieTokenExpiresIn)
 	if err != nil {
 		return Session{}, NewError(InternalError, "An error occurred whilst signing in")
 	}
 
+	sessionExpiresIn := time.Minute * 15
 	return Session{
 		Cookie:    cookie,
 		ExpiresIn: sessionExpiresIn,
