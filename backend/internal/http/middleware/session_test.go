@@ -13,7 +13,7 @@ import (
 	"github.com/jacob-ian/jacobianmatthews.com/backend/mock"
 )
 
-type authMiddlewareTest struct {
+type sessionMiddlewareTest struct {
 	Name                     string
 	MockSessionServiceValues mock.MockSessionServiceValues
 	RequestCookies           []http.Cookie
@@ -23,11 +23,11 @@ type authMiddlewareTest struct {
 	ExpectedSetCookies       []http.Cookie
 }
 
-type authMiddlewareSuite struct {
-	Tests []authMiddlewareTest
+type sessionMiddlewareSuite struct {
+	Tests []sessionMiddlewareTest
 }
 
-func runAuthMiddlewareSuite(t *testing.T, suite authMiddlewareSuite) {
+func runSessionMiddlewareSuite(t *testing.T, suite sessionMiddlewareSuite) {
 	for i := range suite.Tests {
 		test := suite.Tests[i]
 
@@ -109,10 +109,10 @@ func TestAuthMiddleware(t *testing.T) {
 			UpdatedAt:     time.Now(),
 		},
 	}
-	runAuthMiddlewareSuite(t, authMiddlewareSuite{
-		Tests: []authMiddlewareTest{
+	runSessionMiddlewareSuite(t, sessionMiddlewareSuite{
+		Tests: []sessionMiddlewareTest{
 			{
-				Name: "Should attach session user to context if has valid session cookie",
+				Name: "Should attach session user to context and extend session cookie 15 mins if has valid session cookie",
 				MockSessionServiceValues: mock.MockSessionServiceValues{
 					VerifySession: mock.MockResponse{
 						Value: sessionUser,
@@ -135,9 +135,16 @@ func TestAuthMiddleware(t *testing.T) {
 						MaxAge: 10,
 					},
 				},
+				ExpectedSetCookies: []http.Cookie{
+					{
+						Name:   "session",
+						Value:  "session-cookie",
+						MaxAge: 60 * 15,
+					},
+				},
 			},
 			{
-				Name: "Should not attach a user when not signed in",
+				Name: "Should not attach a user to context when not signed in",
 				MockSessionServiceValues: mock.MockSessionServiceValues{
 					VerifySession: mock.MockResponse{
 						Value: core.SessionUser{},
