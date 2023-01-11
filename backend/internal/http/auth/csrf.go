@@ -11,7 +11,7 @@ type csrfResponse struct {
 }
 
 // Ensures that a CSRF Token is present in the browser
-func CSRFTokenHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
+func NewCSRFTokenHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)

@@ -8,7 +8,7 @@ import (
 )
 
 // Return the details for the currently signed in user
-func UserInfoHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
+func NewUserInfoHandler(W *res.ResponseWriterFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)

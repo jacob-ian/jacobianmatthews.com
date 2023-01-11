@@ -12,7 +12,7 @@ type logOutResponse struct {
 }
 
 // Revokes the user's session (signs the user out)
-func LogoutHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
+func NewLogoutHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
