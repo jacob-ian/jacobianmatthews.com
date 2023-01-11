@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/core"
+	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/middleware"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/http/res"
 	"github.com/jacob-ian/jacobianmatthews.com/backend/internal/json"
 )
@@ -18,8 +19,8 @@ type logInResponse struct {
 	ExpiresIn int    `json:"expiresIn"`
 }
 
-// Attempt to sign the user into the website
-func LoginHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
+// Creates a user login handler
+func NewLoginHandler(W *res.ResponseWriterFactory, sessionService core.SessionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			W.NewResponseWriter(w, r).WriteError("Method not allowed", http.StatusMethodNotAllowed)
@@ -31,8 +32,7 @@ func LoginHandler(W *res.ResponseWriterFactory, sessionService core.SessionServi
 			return
 		}
 
-		csrfCookie, err := r.Cookie("csrfToken")
-		if err != nil || csrfCookie.Value != payload.CsrfToken {
+		if csrfToken, ok := middleware.CSRFTokenFromContext(r.Context()); !ok || csrfToken != payload.CsrfToken {
 			W.NewResponseWriter(w, r).WriteError("Invalid CSRF", http.StatusBadRequest)
 			return
 		}

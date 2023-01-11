@@ -57,10 +57,12 @@ func (a *Application) connectMiddleware(middleware []Middleware) {
 
 func (a *Application) connectControllers() {
 	auth.ConnectControllers(auth.AuthControllersConfig{
-		BaseRoute:      "/api/auth",
-		Router:         a.router,
-		Res:            a.res,
-		SessionService: a.services.SessionService,
+		BaseRoute: "/api/auth",
+		Router:    a.router,
+		Res:       a.res,
+		Services: auth.AuthControllerServices{
+			SessionService: a.services.SessionService,
+		},
 	})
 }
 
@@ -78,9 +80,7 @@ func NewApplication(config Config) *Application {
 	}
 
 	writer := res.NewResponseWriterFactory(res.ResponseWriterConfig{
-		Afterware: []res.Afterware{
-			middleware.NewCsrfMiddleware(),
-		},
+		Afterware: []res.Afterware{},
 	})
 
 	app := &Application{
@@ -99,6 +99,7 @@ func NewApplication(config Config) *Application {
 		middleware.NewSessionMiddleware(middleware.SessionMiddlewareConfig{
 			SessionService: app.services.SessionService,
 		}),
+		middleware.NewCsrfMiddleware(),
 	})
 
 	app.connectControllers()
