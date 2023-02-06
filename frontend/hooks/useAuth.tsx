@@ -1,5 +1,4 @@
 import { useContext, useEffect } from "react";
-import { User } from "../interfaces/user.interface";
 import { useRouter } from "next/router";
 import { AuthContext } from "../context/auth/AuthContext";
 import { AuthResult } from "../context/auth/useRedirectAuth";
